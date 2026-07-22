@@ -96,11 +96,43 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      # Mode STRICT : fait échouer la pipeline si le Quality Gate est rouge.
-      # SonarCloud calcule le gate de façon asynchrone après le scan ci-dessus,
-      # donc on attend son résultat avant de continuer.
       - name: Wait for and check Quality Gate
-        uses: SonarSource/sonarqube-quality-gate-action@master
-        timeout-minutes: 5
+        run: |
+          set -e
+          REPORT_FILE=".scannerwork/report-task.txt"
+          CE_TASK_URL=$(grep 'ceTaskUrl=' "$REPORT_FILE" | cut -d'=' -f2-)
+          echo "CE task URL: $CE_TASK_URL"
+
+          STATUS="PENDING"
+          ATTEMPTS=0
+          RESPONSE=""
+          while [ "$STATUS" != "SUCCESS" ] && [ "$STATUS" != "FAILED" ] && [ "$STATUS" != "CANCELED" ] && [ $ATTEMPTS -lt 30 ]; do
+            sleep 5
+            RESPONSE=$(curl -s -u "${SONAR_TOKEN}:" "$CE_TASK_URL")
+            STATUS=$(echo "$RESPONSE" | jq -r '.task.status')
+            ATTEMPTS=$((ATTEMPTS+1))
+            echo "Tentative $ATTEMPTS : statut de la tâche = $STATUS"
+          done
+
+          if [ "$STATUS" != "SUCCESS" ]; then
+            echo "❌ La tâche d'analyse n'a pas abouti (statut: $STATUS)"
+            exit 1
+          fi
+
+          ANALYSIS_ID=$(echo "$RESPONSE" | jq -r '.task.analysisId')
+          echo "Analysis ID: $ANALYSIS_ID"
+
+          GATE_RESPONSE=$(curl -s -u "${SONAR_TOKEN}:" "https://sonarcloud.io/api/qualitygates/project_status?analysisId=${ANALYSIS_ID}")
+          echo "Réponse Quality Gate : $GATE_RESPONSE"
+
+          GATE_STATUS=$(echo "$GATE_RESPONSE" | jq -r '.projectStatus.status')
+          echo "Statut Quality Gate : $GATE_STATUS"
+
+          if [ "$GATE_STATUS" != "OK" ]; then
+            echo "❌ Quality Gate FAILED"
+            exit 1
+          fi
+
+          echo "✅ Quality Gate PASSED"
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
