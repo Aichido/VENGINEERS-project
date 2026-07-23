@@ -9,8 +9,18 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) { setLoading(false); return; }
-    api.get('/me').then(res => setUser(res.data)).catch(() => localStorage.removeItem('token')).finally(() => setLoading(false));
+
+    if (!token) {
+      // Cas de sortie anticipée légitime : pas de token, rien à charger.
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- early bail-out, pas de cascade de rendus réelle ici
+      setLoading(false);
+      return;
+    }
+
+    api.get('/me')
+      .then((res) => setUser(res.data))
+      .catch(() => localStorage.removeItem('token'))
+      .finally(() => setLoading(false));
   }, []);
 
   const login = async (email, password) => {
@@ -32,4 +42,5 @@ export function AuthProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook co-localisé volontairement avec son Provider
 export const useAuth = () => useContext(AuthContext);
