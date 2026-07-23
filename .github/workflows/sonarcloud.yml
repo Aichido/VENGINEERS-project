@@ -1,0 +1,145 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches: [main, 'feature/**', 'chore/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-tests:
+    name: Backend (Laravel) - Tests & Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # nécessaire pour l'analyse SonarCloud (blame git)
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: pcov
+          extensions: mbstring, dom, fileinfo, mysql
+
+      - name: Install Composer dependencies
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy .env
+        working-directory: backend
+        run: cp .env.example .env && php artisan key:generate
+
+      - name: Run tests with coverage (Pest/PHPUnit)
+        working-directory: backend
+        run: php artisan test --coverage-clover=coverage/clover.xml
+
+      - name: Upload backend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage/clover.xml
+
+  frontend-tests:
+    name: Frontend (React) - Tests & Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run tests with coverage (Vitest)
+        working-directory: frontend
+        run: npm run test -- --coverage
+
+      - name: Upload frontend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/lcov.info
+
+  sonarcloud:
+    name: SonarCloud Scan
+    needs: [backend-tests, frontend-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download backend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage
+
+      - name: Download frontend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # Mode STRICT, MAIS UNIQUEMENT SUR main : le plan gratuit SonarCloud
+      # n'autorise pas la lecture du Quality Gate sur les branches autres que
+      # main ("Organization is not allowed to access data from non main
+      # branches" - confirmé le 22/07/2026). Sur les autres branches/PR,
+      # l'analyse tourne quand même (métriques visibles sur le dashboard),
+      # mais le blocage strict ne s'applique qu'aux push sur main.
+      - name: Wait for and check Quality Gate
+        if: github.ref == 'refs/heads/main'
+        run: |
+          set -e
+          REPORT_FILE=".scannerwork/report-task.txt"
+          CE_TASK_URL=$(grep 'ceTaskUrl=' "$REPORT_FILE" | cut -d'=' -f2-)
+          echo "CE task URL: $CE_TASK_URL"
+
+          STATUS="PENDING"
+          ATTEMPTS=0
+          RESPONSE=""
+          while [ "$STATUS" != "SUCCESS" ] && [ "$STATUS" != "FAILED" ] && [ "$STATUS" != "CANCELED" ] && [ $ATTEMPTS -lt 30 ]; do
+            sleep 5
+            RESPONSE=$(curl -s -u "${SONAR_TOKEN}:" "$CE_TASK_URL")
+            STATUS=$(echo "$RESPONSE" | jq -r '.task.status')
+            ATTEMPTS=$((ATTEMPTS+1))
+            echo "Tentative $ATTEMPTS : statut de la tâche = $STATUS"
+          done
+
+          if [ "$STATUS" != "SUCCESS" ]; then
+            echo "❌ La tâche d'analyse n'a pas abouti (statut: $STATUS)"
+            exit 1
+          fi
+
+          ANALYSIS_ID=$(echo "$RESPONSE" | jq -r '.task.analysisId')
+          echo "Analysis ID: $ANALYSIS_ID"
+
+          GATE_RESPONSE=$(curl -s -u "${SONAR_TOKEN}:" "https://sonarcloud.io/api/qualitygates/project_status?analysisId=${ANALYSIS_ID}")
+          echo "Réponse Quality Gate : $GATE_RESPONSE"
+
+          GATE_STATUS=$(echo "$GATE_RESPONSE" | jq -r '.projectStatus.status')
+          echo "Statut Quality Gate : $GATE_STATUS"
+
+          if [ "$GATE_STATUS" != "OK" ]; then
+            echo "❌ Quality Gate FAILED"
+            exit 1
+          fi
+
+          echo "✅ Quality Gate PASSED"
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
