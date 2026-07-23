@@ -2,10 +2,11 @@ name: Backend CI/CD
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, 'feature/**', 'chore/**']
     paths:
       - "backend/**"
   pull_request:
+    branches: [main]
     paths:
       - "backend/**"
 
@@ -46,13 +47,14 @@ jobs:
         working-directory: backend
         run: php artisan test
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          projectBaseDir: backend
+      # NOTE (23/07/2026) : l'étape "SonarCloud Scan" qui était ici a été
+      # retirée. Elle faisait doublon avec le workflow sonarcloud.yml, qui
+      # analyse déjà tout le projet (backend + frontend) sous une seule clé
+      # SonarCloud unifiée. Garder les deux provoquait une erreur
+      # (sonar.projectKey/organization manquants, car ce job n'a pas son
+      # propre sonar-project.properties dans backend/) et risquait de créer
+      # des analyses concurrentes sur le même projet. Voir aussi la même
+      # correction appliquée à frontend-ci.yml.
 
   build-and-push:
     needs: test
