@@ -1,0 +1,26 @@
+/* Body */
+body {
+    background-color: #F7F7F7;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+}
+
+/* Logo */
+.header {
+    background-color: #000000;
+}
+
+/* Boutons */
+.button-error,
+.button-primary {
+    background-color: #F80000;
+    border-bottom: 8px solid #F80000;
+    border-left: 18px solid #F80000;
+    border-right: 18px solid #F80000;
+    border-top: 8px solid #F80000;
+}
+
+/* Footer */
+.footer {
+    color: #707070;
+}
