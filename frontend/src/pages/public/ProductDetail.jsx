@@ -11,7 +11,14 @@ const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000
 
 export default function ProductDetail() {
   const { id } = useParams()
+  // Remounting the view whenever `id` changes (via `key`) gives every piece
+  // of state its fresh initial value for free — loading starts back at
+  // true, notFound/error/selectedImage reset to their defaults — instead of
+  // resetting them synchronously inside an effect (react-hooks/set-state-in-effect).
+  return <ProductDetailView key={id} id={id} />
+}
 
+function ProductDetailView({ id }) {
   const [product, setProduct] = useState(null)
   const [relatedProducts, setRelatedProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -22,12 +29,12 @@ export default function ProductDetail() {
 
   const [shareLabel, setShareLabel] = useState('Share')
 
-  useEffect(() => {
-    setLoading(true)
-    setNotFound(false)
-    setError(null)
-    setSelectedImage(0)
+  // Lazy initial state: the initializer runs once, on mount of this
+  // specific product's view (i.e. once per `id`, thanks to the remount
+  // above), instead of calling the impure Date.now() during every render.
+  const [now] = useState(() => Date.now())
 
+  useEffect(() => {
     const minDelay = new Promise((resolve) => setTimeout(resolve, 1000))
 
     Promise.all([api.get(`/products/${id}`), minDelay])
@@ -48,7 +55,6 @@ export default function ProductDetail() {
   // Fetch related products once the main product is known
   useEffect(() => {
     if (!product?.category?.id) {
-      setRelatedProducts([])
       return
     }
 
@@ -98,7 +104,7 @@ export default function ProductDetail() {
 
   const images = getGalleryImages(product)
   const isNew = product.created_at
-    ? Date.now() - new Date(product.created_at).getTime() < ONE_MONTH_MS
+    ? now - new Date(product.created_at).getTime() < ONE_MONTH_MS
     : false
 
   const handleShare = async () => {
