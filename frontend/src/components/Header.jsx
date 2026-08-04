@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 
 const COLORS = {
-  primary: '#F80000',
+  primary: '#BC0100',
   primaryHover: '#C62221',
 }
 

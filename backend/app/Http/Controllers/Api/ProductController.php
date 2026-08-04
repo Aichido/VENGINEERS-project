@@ -36,7 +36,10 @@ class ProductController extends Controller
             });
         }
 
-        $products = $query->paginate(12);
+        $perPage = (int) $request->input('per_page', 9);
+        $perPage = max(1, min($perPage, 50)); // guard against 0, negative, or abusive values
+
+        $products = $query->paginate($perPage);
 
         return response()->json($products);
     }

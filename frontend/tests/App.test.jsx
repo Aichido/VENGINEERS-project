@@ -1,44 +1,123 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import App from '../src/App';
 
-// NOTE : App.jsx est encore le template par défaut généré par Vite
-// (logos React/Vite, compteur de démo). Ce test couvre ce composant
-// tel qu'il existe aujourd'hui pour sortir le fichier du 0% de couverture,
-// mais il devra être réécrit dès que App.jsx portera la vraie page Accueil
-// Vengineers (routes, layout, etc.).
+// App.jsx used to be the default Vite template (logos, demo counter).
+// It now renders the real Vengineers routing (PublicLayout + public pages),
+// so this file replaces the old template-based test entirely.
 
-describe('App', () => {
-  it("affiche le titre 'Get started'", () => {
-    render(<App />);
-    expect(screen.getByRole('heading', { name: /get started/i })).toBeInTheDocument();
+// Mock the shared Axios instance so routing tests never hit the network.
+// Each data-driven page (Home, Products, ProductDetail) gets a minimal,
+// safe payload matching the real API response shape.
+vi.mock('../src/services/api', () => ({
+  default: {
+    get: vi.fn((url) => {
+      // GET /products/:id -> single product detail (flat object, not paginated)
+      if (/\/products\/\d+$/.test(url)) {
+        return Promise.resolve({
+          data: {
+            id: 1,
+            name: 'Test Product',
+            description: 'A test product used for routing tests.',
+            price: 1234.5,
+            created_at: new Date().toISOString(),
+            category: { id: 1, name: 'Test Category' },
+            images: [
+              {
+                id: 1,
+                path: 'https://picsum.photos/seed/1/600/400',
+                is_primary: true,
+                position: 1,
+              },
+            ],
+          },
+        });
+      }
+
+      // GET /products, GET /categories -> paginated/list shape
+      return Promise.resolve({ data: { data: [], last_page: 1, total: 0 } });
+    }),
+    post: vi.fn(() => Promise.resolve({ data: {} })),
+  },
+}));
+
+function renderAt(path) {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <App />
+    </MemoryRouter>
+  );
+}
+
+describe('App routing', () => {
+  it('renders the Home page at "/"', async () => {
+    renderAt('/');
+    expect(
+      await screen.findByRole(
+        'heading',
+        { name: /touch excellence/i },
+        { timeout: 3000 }
+      )
+    ).toBeInTheDocument();
   });
 
-  it("affiche le compteur initialisé à 0", () => {
-    render(<App />);
-    expect(screen.getByRole('button', { name: /count is 0/i })).toBeInTheDocument();
+  it('renders the About page at "/about"', async () => {
+    renderAt('/about');
+    expect(
+      await screen.findByRole('heading', { name: /about vengineers/i })
+    ).toBeInTheDocument();
   });
 
-  it("incrémente le compteur au clic", async () => {
-    const user = userEvent.setup();
-    render(<App />);
-
-    const button = screen.getByRole('button', { name: /count is 0/i });
-    await user.click(button);
-
-    expect(screen.getByRole('button', { name: /count is 1/i })).toBeInTheDocument();
+  it('renders the Products page at "/products"', async () => {
+    renderAt('/products');
+    expect(
+      await screen.findByRole(
+        'heading',
+        { name: /cutting-edge technology at your fingertips/i },
+        { timeout: 3000 }
+      )
+    ).toBeInTheDocument();
   });
 
-  it("affiche les liens vers la documentation Vite et React", () => {
-    render(<App />);
-    expect(screen.getByRole('link', { name: /explore vite/i })).toHaveAttribute(
-      'href',
-      'https://vite.dev/'
-    );
-    expect(screen.getByRole('link', { name: /learn more/i })).toHaveAttribute(
-      'href',
-      'https://react.dev/'
-    );
+  it('renders the Product Detail page at "/products/:id"', async () => {
+    renderAt('/products/1');
+    expect(
+      await screen.findByRole(
+        'heading',
+        { name: /test product/i },
+        { timeout: 3000 }
+      )
+    ).toBeInTheDocument();
+  });
+
+  it('renders the Services page at "/services"', async () => {
+    renderAt('/services');
+    expect(
+      await screen.findByRole('heading', { name: /our services/i })
+    ).toBeInTheDocument();
+  });
+
+  it('renders the Contact page at "/contact"', async () => {
+    renderAt('/contact');
+    expect(
+      await screen.findByRole('heading', {
+        name: /let's talk about your project/i,
+      })
+    ).toBeInTheDocument();
+  });
+
+  it('renders the Login page at "/login"', async () => {
+    renderAt('/login');
+    expect(
+      await screen.findByRole('heading', { name: /^login$/i })
+    ).toBeInTheDocument();
+  });
+
+  it('renders the Register page at "/register"', async () => {
+    renderAt('/register');
+    expect(
+      await screen.findByRole('heading', { name: /^register$/i })
+    ).toBeInTheDocument();
   });
 });

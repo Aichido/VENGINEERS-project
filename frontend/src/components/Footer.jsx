@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Mail, Share2, MessageCircle } from 'lucide-react'
+import { FaFacebook, FaInstagram, FaLinkedin } from 'react-icons/fa6'
 
 const COLORS = {
   primary: '#F80000',
@@ -8,10 +8,10 @@ const COLORS = {
 }
 
 const navLinks = [
-  { to: '/', label: 'Accueil' },
-  { to: '/a-propos', label: 'À propos' },
-  { to: '/produits', label: 'Nos produits' },
-  { to: '/services', label: 'Nos services' },
+  { to: '/', label: 'Home' },
+  { to: '/about', label: 'About' },
+  { to: '/products', label: 'Products' },
+  { to: '/services', label: 'Services' },
   { to: '/contact', label: 'Contact' },
 ]
 
@@ -20,11 +20,11 @@ export default function Footer() {
     <footer style={{ backgroundColor: '#000000' }} className="text-white py-12">
       <div className="container">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          {/* À propos */}
+          {/* About */}
           <div>
             <h3 className="font-heading font-bold text-lg mb-4">Vengineers</h3>
             <p className="text-gray-400 text-sm">
-              Spécialiste des solutions d'affichage interactif grand format pour entreprises et institutions.
+              Specialist in large-format interactive display solutions for businesses and institutions.
             </p>
             <Link
               to="/contact"
@@ -33,7 +33,7 @@ export default function Footer() {
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = COLORS.primaryHover)}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = COLORS.primary)}
             >
-              Contactez-nous
+              Contact Us
             </Link>
           </div>
 
@@ -45,7 +45,7 @@ export default function Footer() {
             <div className="space-y-3 text-sm text-gray-400">
               <div className="flex items-start gap-2">
                 <span style={{ color: COLORS.primary }}>📍</span>
-                <p>Plaza Center, Maurice</p>
+                <p>Plaza Center, Mauritius</p>
               </div>
               <div className="flex items-start gap-2">
                 <span style={{ color: COLORS.primary }}>📧</span>
@@ -78,21 +78,12 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Réseaux sociaux */}
+          {/* Social */}
           <div>
             <h4 className="font-heading font-bold text-base mb-4" style={{ color: COLORS.gold }}>
-              RÉSEAUX SOCIAUX
+              SOCIAL MEDIA
             </h4>
             <div className="flex items-center gap-4">
-              <a
-                href="https://linkedin.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="LinkedIn"
-                className="p-2 rounded border border-gray-600 hover:border-white hover:text-white transition-colors"
-              >
-                <Mail size={18} />
-              </a>
               <a
                 href="https://facebook.com"
                 target="_blank"
@@ -100,7 +91,7 @@ export default function Footer() {
                 aria-label="Facebook"
                 className="p-2 rounded border border-gray-600 hover:border-white hover:text-white transition-colors"
               >
-                <Share2 size={18} />
+                <FaFacebook size={18} />
               </a>
               <a
                 href="https://instagram.com"
@@ -109,21 +100,30 @@ export default function Footer() {
                 aria-label="Instagram"
                 className="p-2 rounded border border-gray-600 hover:border-white hover:text-white transition-colors"
               >
-                <MessageCircle size={18} />
+                <FaInstagram size={18} />
+              </a>
+              <a
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+                className="p-2 rounded border border-gray-600 hover:border-white hover:text-white transition-colors"
+              >
+                <FaLinkedin size={18} />
               </a>
             </div>
           </div>
         </div>
 
-        {/* Bas de page */}
+        {/* Bottom bar */}
         <div className="border-t border-gray-700 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-400">
-          <p>&copy; {new Date().getFullYear()} Vengineers. Tous droits réservés.</p>
+          <p>&copy; {new Date().getFullYear()} Vengineers. All rights reserved.</p>
           <div className="flex gap-6 mt-4 md:mt-0">
             <Link to="#" className="hover:text-white">
-              Politique de confidentialité
+              Privacy Policy
             </Link>
             <Link to="#" className="hover:text-white">
-              Conditions d'utilisation
+              Terms of Service
             </Link>
             <Link to="/contact" className="hover:text-white">
               Support
