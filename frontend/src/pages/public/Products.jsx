@@ -48,29 +48,41 @@ export default function Products() {
 
   // Fetch products whenever filters or page change
   useEffect(() => {
-    setLoading(true)
-    setError(null)
+    let cancelled = false
 
-    const params = { page: currentPage, per_page: ITEMS_PER_PAGE }
-    if (debouncedSearch) params.search = debouncedSearch
-    if (selectedCategory) params.category = selectedCategory
-    if (appliedPriceRange[0] > PRICE_MIN) params.min_price = appliedPriceRange[0]
-    if (appliedPriceRange[1] < PRICE_MAX) params.max_price = appliedPriceRange[1]
+    const fetchProducts = async () => {
+      setLoading(true)
+      setError(null)
 
-    const minDelay = new Promise((resolve) => setTimeout(resolve, 1000))
+      const params = { page: currentPage, per_page: ITEMS_PER_PAGE }
+      if (debouncedSearch) params.search = debouncedSearch
+      if (selectedCategory) params.category = selectedCategory
+      if (appliedPriceRange[0] > PRICE_MIN) params.min_price = appliedPriceRange[0]
+      if (appliedPriceRange[1] < PRICE_MAX) params.max_price = appliedPriceRange[1]
 
-    Promise.all([api.get('/products', { params }), minDelay])
-      .then(([res]) => {
+      const minDelay = new Promise((resolve) => setTimeout(resolve, 1000))
+
+      try {
+        const [res] = await Promise.all([api.get('/products', { params }), minDelay])
+        if (cancelled) return
         const payload = res.data
         setProducts(payload.data || [])
         setTotalPages(payload.last_page || 1)
         setTotalItems(payload.total ?? payload.data?.length ?? 0)
-      })
-      .catch((err) => {
+      } catch (err) {
+        if (cancelled) return
         console.error('Failed to fetch products:', err)
         setError('Unable to load products right now. Please try again shortly.')
-      })
-      .finally(() => setLoading(false))
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    fetchProducts()
+
+    return () => {
+      cancelled = true
+    }
   }, [selectedCategory, debouncedSearch, appliedPriceRange, currentPage])
 
   const applyPriceFilter = () => {
