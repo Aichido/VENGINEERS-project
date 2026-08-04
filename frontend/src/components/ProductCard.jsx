@@ -1,10 +1,16 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatPrice } from '../lib/formatPrice'
 
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000
 
 export default function ProductCard({ id, name, category, image, description, price, createdAt }) {
-  const isNew = createdAt ? Date.now() - new Date(createdAt).getTime() < ONE_MONTH_MS : false
+  // Lazy initial state: the initializer function runs exactly once, on
+  // mount, instead of on every render. react-hooks/purity forbids calling
+  // impure functions (like Date.now()) directly in the render body — this
+  // is the React-sanctioned way to capture a "now" snapshot safely.
+  const [now] = useState(() => Date.now())
+  const isNew = createdAt ? now - new Date(createdAt).getTime() < ONE_MONTH_MS : false
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
