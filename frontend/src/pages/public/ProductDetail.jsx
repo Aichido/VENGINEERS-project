@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Heart, Share2 } from 'lucide-react'
+import { Share2 } from 'lucide-react'
 import ProductCard from '../../components/ProductCard'
 import ProductDetailSkeleton from '../../components/ProductDetailSkeleton'
 import { getGalleryImages, getPrimaryImage } from '../../lib/productImage'
