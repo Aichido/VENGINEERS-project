@@ -12,13 +12,13 @@ function getFeaturedImage(product) {
   return primary ? primary.path : images[0].path;
 }
 
-function formatFeaturedPrice(price) {
-  const value = Number(price) || 0;
-  return `Rs ${value.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
+// function formatFeaturedPrice(price) {
+//   const value = Number(price) || 0;
+//   return `Rs ${value.toLocaleString("en-US", {
+//     minimumFractionDigits: 2,
+//     maximumFractionDigits: 2,
+//   })}`;
+// }
 
 function isRecentlyAdded(createdAt) {
   if (!createdAt) return false;

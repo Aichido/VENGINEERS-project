@@ -46,7 +46,7 @@ function attachImages(Product $product, int $count = 2): void
 
 // --- index() ---
 
-test('index retourne uniquement les produits actifs, paginés à 12', function () {
+test('index retourne uniquement les produits actifs, paginés à 9 par défaut', function () {
     createProduct(['name' => 'Actif 1', 'is_active' => true]);
     createProduct(['name' => 'Actif 2', 'is_active' => true]);
     createProduct(['name' => 'Inactif', 'is_active' => false]);
@@ -71,17 +71,58 @@ test('index exclut explicitement les produits is_active=false du listing', funct
     expect($ids)->not->toContain($inactive->id);
 });
 
-test('index respecte la pagination Laravel standard (12 par page)', function () {
+test('index respecte la pagination par défaut (9 par page)', function () {
     for ($i = 1; $i <= 15; $i++) {
         createProduct(['name' => "Produit {$i}"]);
     }
 
+    $expectedTotal = Product::where('is_active', true)->count();
+    expect($expectedTotal)->toBe(15);
+
     $response = $this->getJson('/api/products');
 
     $response->assertOk();
-    $response->assertJsonCount(12, 'data');
+    $response->assertJsonCount(min(9, $expectedTotal), 'data');
+    $response->assertJsonPath('total', $expectedTotal);
+    $response->assertJsonPath('last_page', (int) ceil($expectedTotal / 9));
+});
+
+test('index respecte un per_page personnalisé', function () {
+    for ($i = 1; $i <= 15; $i++) {
+        createProduct(['name' => "Produit {$i}"]);
+    }
+
+    $response = $this->getJson('/api/products?per_page=5');
+
+    $response->assertOk();
+    $response->assertJsonCount(5, 'data');
     $response->assertJsonPath('total', 15);
-    $response->assertJsonPath('last_page', 2);
+    $response->assertJsonPath('last_page', 3);
+});
+
+test('index plafonne per_page à 50 même si une valeur plus grande est demandée', function () {
+    for ($i = 1; $i <= 60; $i++) {
+        createProduct(['name' => "Produit {$i}"]);
+    }
+
+    $response = $this->getJson('/api/products?per_page=999');
+
+    $response->assertOk();
+    $response->assertJsonCount(50, 'data');
+});
+
+test('index ramène per_page à 1 si une valeur nulle ou négative est demandée', function () {
+    for ($i = 1; $i <= 3; $i++) {
+        createProduct(['name' => "Produit {$i}"]);
+    }
+
+    $responseZero = $this->getJson('/api/products?per_page=0');
+    $responseZero->assertOk();
+    $responseZero->assertJsonCount(1, 'data');
+
+    $responseNegative = $this->getJson('/api/products?per_page=-5');
+    $responseNegative->assertOk();
+    $responseNegative->assertJsonCount(1, 'data');
 });
 
 test('index filtre par category', function () {
