@@ -18,4 +18,14 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  // Nouveau bloc pour les fichiers de test
+  {
+    files: ['**/*.test.js', '**/*.test.jsx'],
+    languageOptions: {
+      globals: {
+        ...globals.vitest,   // fournit describe, it, expect, vi, beforeEach, etc.
+        ...globals.browser,  // si vos tests utilisent des API DOM (optionnel)
+      },
+    },
+  },
 ])

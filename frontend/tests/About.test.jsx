@@ -54,7 +54,7 @@ describe('About page', () => {
     expect(screen.getByText('Quality')).toBeInTheDocument()
     expect(screen.getByText(/Every piece of hardware undergoes/)).toBeInTheDocument()
     expect(screen.getByText('Service')).toBeInTheDocument()
-    expect(screen.getByText(/Our commitment doesn\'t stop at delivery/)).toBeInTheDocument()
+    expect(screen.getByText(/Our commitment doesn't stop at delivery/)).toBeInTheDocument()
   })
 
   it('renders the final CTA section', () => {

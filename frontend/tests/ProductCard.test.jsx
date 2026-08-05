@@ -1,7 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import ProductCard from '../src/components/ProductCard'
-import { formatPrice } from '../src/lib/formatPrice'
 
 // Mock du formatPrice pour simplifier les assertions
 vi.mock('../src/lib/formatPrice', () => ({

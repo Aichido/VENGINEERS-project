@@ -1,10 +1,13 @@
 <?php
 
+
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    // Supprimer dans l'ordre inverse des clés étrangères
     Product::query()->delete();
     Category::query()->delete();
 });
