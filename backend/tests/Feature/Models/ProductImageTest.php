@@ -3,20 +3,14 @@
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-beforeEach(function () {
-    // Ordre inverse des dépendances
-    ProductImage::query()->delete();
-    Product::query()->delete();
-    Category::query()->delete();
-});
+uses(RefreshDatabase::class);
+
+// Plus de beforeEach avec delete() – RefreshDatabase nettoie tout automatiquement
 
 it('can create a product image manually', function () {
-    $category = Category::create([
-        'name' => 'Électronique',
-        'slug' => 'electronique'
-    ]);
-
+    $category = Category::create(['name' => 'Électronique', 'slug' => 'electronique']);
     $product = Product::create([
         'name' => 'Smartphone',
         'description' => 'Un smartphone dernier cri',
@@ -42,11 +36,7 @@ it('can create a product image manually', function () {
 });
 
 it('belongs to a product', function () {
-    $category = Category::create([
-        'name' => 'Informatique',
-        'slug' => 'informatique'
-    ]);
-
+    $category = Category::create(['name' => 'Informatique', 'slug' => 'informatique']);
     $product = Product::create([
         'name' => 'Ordinateur portable',
         'description' => 'PC puissant',
@@ -72,20 +62,12 @@ it('belongs to a product', function () {
 it('has correct fillable attributes', function () {
     $image = new ProductImage();
     expect($image->getFillable())->toBe([
-        'product_id',
-        'path',
-        'thumbnail_path',
-        'position',
-        'is_primary'
+        'product_id', 'path', 'thumbnail_path', 'position', 'is_primary'
     ]);
 });
 
 it('has correct casts', function () {
-    $category = Category::create([
-        'name' => 'Accessoires',
-        'slug' => 'accessoires'
-    ]);
-
+    $category = Category::create(['name' => 'Accessoires', 'slug' => 'accessoires']);
     $product = Product::create([
         'name' => 'Souris',
         'description' => 'Souris ergonomique',
@@ -103,9 +85,7 @@ it('has correct casts', function () {
         'is_primary' => true
     ]);
 
-    // Recharger pour appliquer les casts
     $image->refresh();
-
     expect($image->position)->toBeInt()
         ->and($image->is_primary)->toBeBool()
         ->and($image->is_primary)->toBeTrue();

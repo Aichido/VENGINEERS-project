@@ -8,12 +8,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
-    ProductImage::query()->delete();
-    Product::query()->delete();
-    Category::query()->delete();
-});
-
 it('has correct fillable attributes', function () {
     $product = new Product();
     expect($product->getFillable())->toBe([

@@ -7,10 +7,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
-    Product::query()->delete();
-    Category::query()->delete();
-});
 
 it('can create a category manually', function () {
     $category = Category::create([
