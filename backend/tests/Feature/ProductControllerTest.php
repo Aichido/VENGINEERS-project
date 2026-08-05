@@ -5,6 +5,13 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
+beforeEach(function () {
+    // Supprimer dans l'ordre inverse des dépendances
+    ProductImage::query()->delete();
+    Product::query()->delete();
+    Category::query()->delete();
+});
+
 uses(RefreshDatabase::class);
 
 function createCategory(?string $name = null): Category
