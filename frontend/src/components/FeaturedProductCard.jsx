@@ -12,14 +12,6 @@ function getFeaturedImage(product) {
   return primary ? primary.path : images[0].path;
 }
 
-// function formatFeaturedPrice(price) {
-//   const value = Number(price) || 0;
-//   return `Rs ${value.toLocaleString("en-US", {
-//     minimumFractionDigits: 2,
-//     maximumFractionDigits: 2,
-//   })}`;
-// }
-
 function isRecentlyAdded(createdAt) {
   if (!createdAt) return false;
   const created = new Date(createdAt).getTime();
@@ -63,10 +55,6 @@ export default function FeaturedProductCard({ product }) {
           {product.description}
         </p>
       )}
-{/* 
-      <p className="font-bold text-[#F80000] mb-4">
-        {formatFeaturedPrice(product.price)}
-      </p> */}
 
       <span className="w-full text-center py-2 border border-[#F80000] text-[#F80000] font-semibold text-sm rounded-lg group-hover:bg-[#F80000] group-hover:text-white transition-colors">
         View details
