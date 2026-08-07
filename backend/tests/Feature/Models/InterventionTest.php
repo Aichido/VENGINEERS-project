@@ -11,13 +11,15 @@ it('has the correct fillable attributes', function () {
     $intervention = new Intervention();
 
     expect($intervention->getFillable())->toEqual([
-        'client_id',
-        'technicien_id',
-        'titre',
-        'description',
-        'statut',
-        'priorite',
-        'date_souhaitee',
+           'client_id',
+            'technicien_id',
+            'titre',
+            'description',
+            'equipement',
+            'statut',
+            'priorite',
+            'date_souhaitee',
+            'public_id',
     ]);
 });
 

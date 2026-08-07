@@ -155,10 +155,9 @@ it('forbids a client from viewing another client order', function () {
     $this->app['auth']->forgetGuards();
 
     $this->withHeader('Authorization', "Bearer {$tokenA}")
-        ->getJson("/api/client/orders/{$order['id']}")
-        ->assertStatus(403);
+    ->getJson('/api/client/orders/' . rawurlencode($order['public_id']))
+    ->assertStatus(403);
 });
-
 it('rejects order access for a non-client role', function () {
     $adminRole = Role::firstOrCreate(['name' => 'admin']);
     $admin = User::factory()->create(['role_id' => $adminRole->id]);
@@ -177,12 +176,11 @@ it('shows order details for the owning client', function () {
         ->json();
 
     $this->app['auth']->forgetGuards();
-
     $response = $this->withHeader('Authorization', "Bearer {$token}")
-        ->getJson("/api/client/orders/{$order['id']}");
+        ->getJson('/api/client/orders/' . rawurlencode($order['public_id']));
 
     $response->assertStatus(200)
-        ->assertJsonPath('id', $order['id'])
+        ->assertJsonPath('public_id', $order['public_id'])
         ->assertJsonPath('client_id', $user->id)
         ->assertJsonPath('items.0.product.id', $product->id);
 });

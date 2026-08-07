@@ -1,6 +1,9 @@
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { CartProvider } from './context/CartContext'
 import PublicLayout from './layouts/PublicLayout'
+import ProtectedRoute from './routes/ProtectedRoute'
+import DashboardLayout from './layouts/DashboardLayout'
 
 // Public pages
 import Home from './pages/public/Home'
@@ -11,10 +14,19 @@ import Services from './pages/public/Services'
 import Contact from './pages/public/Contact'
 import Login from './pages/public/Login'
 import Register from './pages/public/Register'
+import Cart from './pages/public/Cart'
+
+// Dashboard Client (Phase 3)
+import ClientDashboard from './pages/dashboards/client/ClientDashboard';
+import Interventions from './pages/dashboards/client/Interventions'
+import InterventionNew from './pages/dashboards/client/InterventionNew'
+import Orders from './pages/dashboards/client/Orders'
+import OrderDetail from './pages/dashboards/client/OrderDetail'
 
 function App() {
   return (
     <AuthProvider>
+       <CartProvider>
       <Routes>
         <Route element={<PublicLayout />}>
           <Route index element={<Home />} />
@@ -25,16 +37,21 @@ function App() {
           <Route path="contact" element={<Contact />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="cart" element={<Cart />} />
         </Route>
 
+        <Route element={<ProtectedRoute allowedRoles={['client']} />}>
+          <Route element={<DashboardLayout />}>
+             <Route path="/client" element={<ClientDashboard />} />
+             <Route path="/client/interventions" element={<Interventions />} />
+             <Route path="/client/interventions/new" element={<InterventionNew />} />
+             <Route path="/client/orders" element={<Orders />} />
+              <Route path="/client/orders/:publicId" element={<OrderDetail />} />
+          </Route>
+        </Route>
         {/*
           Dashboards privés (Phases 3 à 6) — à activer au fur et à mesure :
 
-          <Route element={<ProtectedRoute allowedRoles={['client']} />}>
-            <Route element={<DashboardLayout />}>
-              <Route path="client/*" element={<ClientDashboard />} />
-            </Route>
-          </Route>
 
           <Route element={<ProtectedRoute allowedRoles={['commercial']} />}>
             <Route element={<DashboardLayout />}>
@@ -55,6 +72,7 @@ function App() {
           </Route>
         */}
       </Routes>
+      </CartProvider>
     </AuthProvider>
   )
 }

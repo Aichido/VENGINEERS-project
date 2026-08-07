@@ -17,6 +17,7 @@ it('has the correct fillable attributes', function () {
         'commercial_id',
         'status',
         'total',
+        'public_id',
     ]);
 });
 

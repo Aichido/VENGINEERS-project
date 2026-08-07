@@ -23,11 +23,18 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = async (email, password) => {
+const login = async (email, password) => {
     const res = await api.post('/login', { email, password });
     localStorage.setItem('token', res.data.token);
     setUser(res.data.user);
+    return res.data.user;
   };
+  const register = async (payload) => {
+    await api.post('/register', payload);
+    // Pas d'auto-login : l'API /register ne renvoie pas de token,
+    // l'utilisateur doit se connecter explicitement ensuite.
+  };
+
 
   const logout = async () => {
     await api.post('/logout');
@@ -36,7 +43,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register,  logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

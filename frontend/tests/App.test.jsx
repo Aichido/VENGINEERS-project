@@ -107,17 +107,17 @@ describe('App routing', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the Login page at "/login"', async () => {
-    renderAt('/login');
-    expect(
-      await screen.findByRole('heading', { name: /^login$/i })
-    ).toBeInTheDocument();
-  });
+ it('renders the Login page at "/login"', async () => {
+  renderAt('/login');
+  expect(
+    await screen.findByRole('heading', { name: /^Login$/i })
+  ).toBeInTheDocument();
+});
 
-  it('renders the Register page at "/register"', async () => {
-    renderAt('/register');
-    expect(
-      await screen.findByRole('heading', { name: /^register$/i })
-    ).toBeInTheDocument();
-  });
+it('renders the Register page at "/register"', async () => {
+  renderAt('/register');
+  expect(
+    await screen.findByRole('heading', { name: /^create an account$/i })
+  ).toBeInTheDocument();
+});
 });

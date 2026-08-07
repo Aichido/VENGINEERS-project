@@ -25,6 +25,7 @@ class InterventionController extends Controller
             ...$request->validated(),
             'client_id' => $request->user()->id,
             'statut'    => 'nouvelle',
+            'priorite'  => 'normale', // forcé côté serveur
         ]);
 
         return response()->json($intervention, 201);

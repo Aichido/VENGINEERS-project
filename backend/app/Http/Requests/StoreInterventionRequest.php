@@ -16,7 +16,7 @@ class StoreInterventionRequest extends FormRequest
         return [
             'titre'          => ['required', 'string', 'max:255'],
             'description'    => ['required', 'string'],
-            'priorite'       => ['required', 'in:basse,normale,haute,urgente'],
+            'equipement'     => ['nullable', 'string', 'max:255'],
             'date_souhaitee' => ['nullable', 'date', 'after_or_equal:today'],
         ];
     }

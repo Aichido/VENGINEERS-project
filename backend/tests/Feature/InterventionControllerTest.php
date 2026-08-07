@@ -42,19 +42,20 @@ it('rejects intervention with missing required fields', function () {
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/client/interventions', ['titre' => ''])
         ->assertStatus(422)
-        ->assertJsonValidationErrors(['titre', 'description', 'priorite']);
+        ->assertJsonValidationErrors(['titre', 'description']);
 });
 
-it('rejects intervention with invalid priorite value', function () {
+it('always forces priorite to normale regardless of client input', function () {
     [$user, $token] = actingClientForIntervention();
 
-    $this->withHeader('Authorization', "Bearer {$token}")
+    $response = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/client/interventions', [
             'titre'       => 'Test',
             'description' => 'Test',
             'priorite'    => 'extreme',
-        ])->assertStatus(422)
-        ->assertJsonValidationErrors(['priorite']);
+        ])->assertStatus(201);
+
+    $response->assertJsonPath('priorite', 'normale');
 });
 
 it('rejects intervention with a date_souhaitee in the past', function () {
