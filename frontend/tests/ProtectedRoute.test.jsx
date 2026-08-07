@@ -3,13 +3,10 @@ import { render, screen } from '@testing-library/react';
 import ProtectedRoute from '../src/routes/ProtectedRoute';
 import { useAuth } from '../src/context/AuthContext';
 
-// On mocke useAuth pour contrôler user/loading indépendamment du vrai AuthProvider.
 vi.mock('../src/context/AuthContext', () => ({
   useAuth: vi.fn(),
 }));
 
-// On mocke Navigate pour capturer la cible de redirection sans avoir besoin
-// d'un vrai contexte de routeur (MemoryRouter, etc.).
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal();
   return {
@@ -23,16 +20,18 @@ describe('ProtectedRoute', () => {
     vi.clearAllMocks();
   });
 
-  it("affiche 'Chargement...' pendant que loading est vrai", () => {
+  it("affiche le spinner pendant que loading est vrai", () => {
     useAuth.mockReturnValue({ user: null, loading: true });
 
-    render(
+    const { container } = render(
       <ProtectedRoute>
         <p>Contenu protégé</p>
       </ProtectedRoute>
     );
 
-    expect(screen.getByText(/chargement/i)).toBeInTheDocument();
+    // Vérifier la présence du spinner via la classe animate-spin
+    const spinner = container.querySelector('.animate-spin');
+    expect(spinner).toBeInTheDocument();
     expect(screen.queryByText('Contenu protégé')).not.toBeInTheDocument();
   });
 

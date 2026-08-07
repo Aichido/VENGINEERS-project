@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['name', 'email', 'password', 'role_id', 'phone', 'address', 'is_active'])]
 #[Hidden(['password', 'remember_token'])]
@@ -39,5 +40,14 @@ class User extends Authenticatable
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
+    }
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'client_id');
+    }
+
+    public function interventions(): HasMany
+    {
+        return $this->hasMany(Intervention::class, 'client_id');
     }
 }

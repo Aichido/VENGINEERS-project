@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Share2 } from 'lucide-react'
+import { Share2, ShoppingCart, Check } from 'lucide-react'
 import ProductCard from '../../components/ProductCard'
 import ProductDetailSkeleton from '../../components/ProductDetailSkeleton'
 import { getGalleryImages, getPrimaryImage } from '../../lib/productImage'
 import { formatPrice } from '../../lib/formatPrice'
 import api from '../../services/api'
+
+import { useCart } from '../../context/CartContext'
 
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000
 
@@ -33,6 +35,10 @@ function ProductDetailView({ id }) {
   // specific product's view (i.e. once per `id`, thanks to the remount
   // above), instead of calling the impure Date.now() during every render.
   const [now] = useState(() => Date.now())
+
+  //cart
+  const { addToCart } = useCart()
+  const [added, setAdded] = useState(false)
 
   useEffect(() => {
     const minDelay = new Promise((resolve) => setTimeout(resolve, 1000))
@@ -107,6 +113,17 @@ function ProductDetailView({ id }) {
     ? now - new Date(product.created_at).getTime() < ONE_MONTH_MS
     : false
 
+  const handleAddToCart = () => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: images[0],
+      stock_qty: product.stock_qty,
+    })
+    setAdded(true)
+    setTimeout(() => setAdded(false), 1500)
+  }
   const handleShare = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href)
@@ -207,7 +224,20 @@ function ProductDetailView({ id }) {
 
               {/* Actions */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8">
-               
+                <button
+                  onClick={handleAddToCart}
+                  disabled={product.stock_qty === 0}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 md:px-8 py-3 md:py-4 rounded font-semibold transition-colors text-sm md:text-base text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: added ? '#10b981' : '#F80000' }}
+                  onMouseEnter={(e) => product.stock_qty !== 0 && !added && (e.currentTarget.style.backgroundColor = '#C62221')}
+                  onMouseLeave={(e) => product.stock_qty !== 0 && !added && (e.currentTarget.style.backgroundColor = '#F80000')}
+                >
+                  {added ? <Check size={20} /> : <ShoppingCart size={20} />}
+                  <span>
+                    {product.stock_qty === 0 ? 'Out of stock' : added ? 'Added to cart' : 'Add to Cart'}
+                  </span>
+                </button>
+
                 <button
                   onClick={handleShare}
                   className="flex items-center justify-center gap-2 px-6 md:px-8 py-3 md:py-4 rounded border-2 border-gray-300 font-semibold transition-colors hover:border-gray-400 text-gray-700 text-sm md:text-base"
@@ -290,7 +320,7 @@ function ProductDetailView({ id }) {
                 </Link>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                {relatedProducts.map((p) => (
+               {relatedProducts.map((p) => (
                   <ProductCard
                     key={p.id}
                     id={p.id}
@@ -300,6 +330,7 @@ function ProductDetailView({ id }) {
                     description={p.description}
                     price={p.price}
                     createdAt={p.created_at}
+                    stockQty={p.stock_qty}
                   />
                 ))}
               </div>

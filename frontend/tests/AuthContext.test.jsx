@@ -1,10 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import api from '../src/services/api';
 
-// On mocke tout le module api pour contrôler get/post sans faire de vrais appels HTTP
 vi.mock('../src/services/api', () => ({
   default: {
     get: vi.fn(),
@@ -12,16 +11,15 @@ vi.mock('../src/services/api', () => ({
   },
 }));
 
-// Petit composant de test qui expose l'état du contexte via le DOM,
-// pour pouvoir asserter dessus sans dépendre de composants réels de l'app.
 function TestConsumer() {
-  const { user, login, logout, loading } = useAuth();
+  const { user, login, register, logout, loading } = useAuth();
 
   return (
     <div>
       <span data-testid="loading">{loading ? 'loading' : 'ready'}</span>
       <span data-testid="user">{user ? user.email : 'no-user'}</span>
       <button onClick={() => login('test@vengineers.mu', 'password')}>login</button>
+      <button onClick={() => register({ name: 'Test', email: 'test@vengineers.mu', password: 'password', password_confirmation: 'password' })}>register</button>
       <button onClick={() => logout()}>logout</button>
     </div>
   );
@@ -96,9 +94,7 @@ describe('AuthContext / AuthProvider', () => {
       expect(screen.getByTestId('loading')).toHaveTextContent('ready');
     });
 
-    await act(async () => {
-      await user.click(screen.getByText('login'));
-    });
+    await user.click(screen.getByText('login'));
 
     expect(api.post).toHaveBeenCalledWith('/login', {
       email: 'test@vengineers.mu',
@@ -106,6 +102,29 @@ describe('AuthContext / AuthProvider', () => {
     });
     expect(localStorage.getItem('token')).toBe('new-token');
     expect(screen.getByTestId('user')).toHaveTextContent('test@vengineers.mu');
+  });
+
+  it("register() appelle l'API /register avec le payload et ne modifie pas l'utilisateur (pas d'auto-login)", async () => {
+    const user = userEvent.setup();
+    api.post.mockResolvedValueOnce({ data: {} });
+
+    renderWithProvider();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('loading')).toHaveTextContent('ready');
+    });
+
+    await user.click(screen.getByText('register'));
+
+    expect(api.post).toHaveBeenCalledWith('/register', {
+      name: 'Test',
+      email: 'test@vengineers.mu',
+      password: 'password',
+      password_confirmation: 'password',
+    });
+    // L'utilisateur ne doit pas être connecté automatiquement
+    expect(screen.getByTestId('user')).toHaveTextContent('no-user');
+    expect(localStorage.getItem('token')).toBeNull();
   });
 
   it("logout() supprime le token et vide l'utilisateur", async () => {
@@ -120,9 +139,7 @@ describe('AuthContext / AuthProvider', () => {
       expect(screen.getByTestId('user')).toHaveTextContent('test@vengineers.mu');
     });
 
-    await act(async () => {
-      await user.click(screen.getByText('logout'));
-    });
+    await user.click(screen.getByText('logout'));
 
     expect(api.post).toHaveBeenCalledWith('/logout');
     expect(localStorage.getItem('token')).toBeNull();

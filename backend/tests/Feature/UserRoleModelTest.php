@@ -71,3 +71,31 @@ test('le mot de passe est haché automatiquement grâce au cast "hashed"', funct
     expect($user->password)->not->toBe('motdepasseclair');
     expect(\Illuminate\Support\Facades\Hash::check('motdepasseclair', $user->password))->toBeTrue();
 });
+
+it('la relation User->orders() retourne les commandes du client', function () {
+    $clientRole = Role::firstOrCreate(['name' => 'client']);
+    $client = User::factory()->create(['role_id' => $clientRole->id]);
+
+    \App\Models\Order::create([
+        'client_id' => $client->id,
+        'status'    => 'en_attente',
+        'total'     => 0,
+    ]);
+
+    expect($client->orders)->toHaveCount(1);
+});
+
+it('la relation User->interventions() retourne les interventions du client', function () {
+    $clientRole = Role::firstOrCreate(['name' => 'client']);
+    $client = User::factory()->create(['role_id' => $clientRole->id]);
+
+    \App\Models\Intervention::create([
+        'client_id'   => $client->id,
+        'titre'       => 'Test',
+        'description' => 'Test',
+        'statut'      => 'nouvelle',
+        'priorite'    => 'normale',
+    ]);
+
+    expect($client->interventions)->toHaveCount(1);
+});

@@ -1,25 +1,18 @@
+// Products.test.jsx — corrigé (dernier test avec le lien "Details →")
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import Products from '../src/pages/public/Products';
 import api from '../src/services/api';
+import { CartProvider } from '../src/context/CartContext';
 
-// Mock the shared Axios instance so no real network call is made.
-// Products.jsx calls GET /categories (once, on mount) and GET /products
-// (on mount and whenever filters/page change).
 vi.mock('../src/services/api', () => ({
   default: {
     get: vi.fn(),
   },
 }));
 
-// Products.jsx pairs every /products fetch with an artificial 1000ms minimum
-// delay (Promise.all([api.get(...), minDelay])) so the loading skeleton is
-// visible even on fast responses. The default Testing Library findBy* timeout
-// (1000ms) races against that delay and can time out under normal test
-// overhead, so every assertion that waits for data to finish loading uses
-// this longer timeout instead.
 const LOAD_TIMEOUT = { timeout: 3000 };
 
 const sampleCategories = [
@@ -65,7 +58,13 @@ function getProductsCalls() {
 }
 
 function renderProducts() {
-  return render(<Products />, { wrapper: MemoryRouter });
+  return render(
+    <MemoryRouter>
+      <CartProvider>
+        <Products />
+      </CartProvider>
+    </MemoryRouter>
+  );
 }
 
 beforeEach(() => {
@@ -76,13 +75,11 @@ beforeEach(() => {
 describe('Products page', () => {
   it('renders the hero heading and eventually shows the product count', async () => {
     renderProducts();
-
     expect(
       screen.getByRole('heading', {
         name: /cutting-edge technology at your fingertips/i,
       })
     ).toBeInTheDocument();
-
     expect(
       await screen.findByText(/2 products/i, {}, LOAD_TIMEOUT)
     ).toBeInTheDocument();
@@ -136,7 +133,6 @@ describe('Products page', () => {
     const minInput = await screen.findByLabelText(/minimum price/i);
     fireEvent.change(minInput, { target: { value: '10000' } });
 
-    // Dragging the slider alone must not trigger a new request
     expect(getProductsCalls().length).toBe(callsBefore);
 
     await user.click(screen.getByRole('button', { name: /^apply$/i }));
@@ -224,8 +220,6 @@ describe('Products page', () => {
   });
 
   it('renders product cards with the correct name, price, category badge and detail link', async () => {
-    // Price chosen without a thousands separator (500, not 1000+) so the
-    // assertion doesn't depend on locale-specific number formatting.
     api.get.mockImplementation((url) => {
       if (url === '/categories') return Promise.resolve({ data: { data: [] } });
       if (url === '/products') {
@@ -257,7 +251,8 @@ describe('Products page', () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/rs\s*500\.00/i)).toBeInTheDocument();
     expect(screen.getByText('Touchscreens')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /view details/i })).toHaveAttribute(
+    // Correction : le lien a pour texte "Details →" et non "View Details"
+    expect(screen.getByRole('link', { name: /details →/i })).toHaveAttribute(
       'href',
       '/products/42'
     );
