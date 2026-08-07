@@ -1,23 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Wrench, Check, Clock, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Wrench, Plus } from 'lucide-react';
 import api from '../../../services/api';
-
-const STATUS = {
-  nouvelle: { label: 'New', tone: 'bg-[#F7F7F7] text-[#707070]', icon: Clock },
-  assignee: { label: 'Assigned', tone: 'bg-[#ECB115]/20 text-[#8a6b0e]', icon: Clock },
-  en_cours: { label: 'In progress', tone: 'bg-[#000a1e]/10 text-[#000a1e]', icon: Wrench },
-  terminee: { label: 'Completed', tone: 'bg-green-100 text-green-700', icon: Check },
-};
-
-function formatDate(value) {
-  if (!value) return '—';
-  return new Date(value).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-}
+import { INTERVENTION_STATUS  as STATUS } from '../../../constants/interventionStatus';
+import { formatDate } from '../../../lib/formatDate';
+import Pagination from '../../../components/Pagination';
 
 export default function Interventions() {
   const location = useLocation();
@@ -147,29 +134,7 @@ export default function Interventions() {
             </div>
 
             {lastPage > 1 && (
-              <div className="mt-6 flex items-center justify-center gap-4">
-                <button
-                  type="button"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="flex items-center gap-1 rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm font-semibold text-[#707070] disabled:opacity-40"
-                >
-                  <ChevronLeft size={16} />
-                  Previous
-                </button>
-                <span className="text-sm text-[#707070]">
-                  Page {page} of {lastPage}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
-                  disabled={page === lastPage}
-                  className="flex items-center gap-1 rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm font-semibold text-[#707070] disabled:opacity-40"
-                >
-                  Next
-                  <ChevronRight size={16} />
-                </button>
-              </div>
+              <Pagination page={page} lastPage={lastPage} onPageChange={setPage} />
             )}
           </>
         )}

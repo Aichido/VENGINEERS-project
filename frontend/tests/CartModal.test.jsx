@@ -1,4 +1,4 @@
-// CartModal.test.jsx — version corrigée
+// CartModal.test.jsx — version complète avec tests de survol
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -177,7 +177,6 @@ describe('CartModal', () => {
     updateQtySpy.mockClear();
 
     // Pour le deuxième item (qty=1), le bouton decrease est désactivé
-    // On ne clique pas dessus car il est disabled. On vérifie seulement qu'il est disabled.
     expect(decreaseButtons[1]).toBeDisabled();
 
     // On clique sur increase pour le deuxième item
@@ -239,12 +238,14 @@ describe('CartModal', () => {
     const onClose = vi.fn();
     renderCartModal(true, onClose);
 
-    const closeButton = screen.getByRole('button', { name: /Close cart/i });
+    const closeButtons = screen.getAllByRole('button', { name: /Close cart/i });
+    const closeButton = closeButtons[1]; // le bouton X (le premier est le backdrop)
     await user.click(closeButton);
 
     expect(onClose).toHaveBeenCalled();
   });
-    it('ferme le modal quand on clique sur "Continue Shopping" dans le footer (panier rempli)', async () => {
+
+  it('ferme le modal quand on clique sur "Continue Shopping" dans le footer (panier rempli)', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     renderCartModal(true, onClose, {}, { user: { id: 1 } });
@@ -252,5 +253,77 @@ describe('CartModal', () => {
     const continueButton = screen.getByRole('button', { name: /Continue Shopping/i });
     await user.click(continueButton);
     expect(onClose).toHaveBeenCalled();
+  });
+
+  // --- Nouveaux tests pour couvrir les lignes 34-63, 139, 149 ---
+
+  it('change la couleur du lien "Continue Shopping" au survol (panier vide)', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    renderCartModal(true, onClose, { items: [], totalPrice: 0 });
+
+    const continueLink = screen.getByRole('link', { name: /Continue Shopping/i });
+    // La couleur de fond initiale est #F80000 (rgb(248,0,0))
+    expect(continueLink.style.backgroundColor).toBe('rgb(248, 0, 0)');
+
+    await user.hover(continueLink);
+    expect(continueLink.style.backgroundColor).toBe('rgb(198, 34, 33)');
+
+    await user.unhover(continueLink);
+    expect(continueLink.style.backgroundColor).toBe('rgb(248, 0, 0)');
+  });
+
+ // tests/CartModal.test.jsx — correction du test de survol du bouton "Continue Shopping" du footer
+
+  it('change la couleur du bouton "Continue Shopping" du footer au survol (panier rempli)', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    renderCartModal(true, onClose);
+
+    const footerContinueButton = screen.getByRole('button', { name: /Continue Shopping/i });
+    // La couleur de fond n'est pas définie initialement, donc la propriété est vide.
+    // On peut soit accepter '' (chaîne vide) ou utiliser getComputedStyle pour la couleur réelle.
+    // Ici on vérifie que la couleur de fond est vide (non définie).
+    expect(footerContinueButton.style.backgroundColor).toBe('');
+    expect(footerContinueButton.style.borderColor).toBe('rgb(248, 0, 0)');
+    expect(footerContinueButton.style.color).toBe('rgb(248, 0, 0)');
+
+    await user.hover(footerContinueButton);
+    // Après survol, la couleur devient #f5f5f5 (rgb(245, 245, 245))
+    expect(footerContinueButton.style.backgroundColor).toBe('rgb(245, 245, 245)');
+
+    await user.unhover(footerContinueButton);
+    // Après sortie, la couleur redevient 'transparent' car définie explicitement dans onMouseLeave
+    expect(footerContinueButton.style.backgroundColor).toBe('transparent');
+  });
+
+  it('change la couleur du bouton "Proceed to Checkout" au survol', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    renderCartModal(true, onClose, {}, { user: { id: 1 } }); // connecté pour voir le bouton
+
+    const checkoutButton = screen.getByRole('button', { name: /Proceed to Checkout/i });
+    expect(checkoutButton.style.backgroundColor).toBe('rgb(248, 0, 0)');
+
+    await user.hover(checkoutButton);
+    expect(checkoutButton.style.backgroundColor).toBe('rgb(198, 34, 33)');
+
+    await user.unhover(checkoutButton);
+    expect(checkoutButton.style.backgroundColor).toBe('rgb(248, 0, 0)');
+  });
+
+  it('change la couleur du bouton "Log in to Checkout" au survol', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    renderCartModal(true, onClose, {}, { user: null });
+
+    const loginButton = screen.getByRole('button', { name: /Log in to Checkout/i });
+    expect(loginButton.style.backgroundColor).toBe('rgb(248, 0, 0)');
+
+    await user.hover(loginButton);
+    expect(loginButton.style.backgroundColor).toBe('rgb(198, 34, 33)');
+
+    await user.unhover(loginButton);
+    expect(loginButton.style.backgroundColor).toBe('rgb(248, 0, 0)');
   });
 });

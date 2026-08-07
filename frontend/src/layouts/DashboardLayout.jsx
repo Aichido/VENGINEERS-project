@@ -122,9 +122,12 @@ export default function DashboardLayout() {
 
       {/* Mobile overlay */}
       {mobileNavOpen && (
-        <div
+        <button
+          type="button"
           className="fixed inset-0 z-40 bg-black/40 md:hidden"
           onClick={() => setMobileNavOpen(false)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMobileNavOpen(false); } }}
+          aria-label="Close menu"
         />
       )}
 

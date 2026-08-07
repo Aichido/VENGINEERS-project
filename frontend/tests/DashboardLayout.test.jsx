@@ -118,8 +118,9 @@ describe('DashboardLayout', () => {
     // Le sidebar doit avoir la classe translate-x-0
     expect(sidebar).toHaveClass('translate-x-0');
 
-    // Fermer via le bouton "Close menu" (le X)
-    const closeButton = screen.getByRole('button', { name: /Close menu/i });
+    // Fermer via le bouton "Close menu" (le X),  le bouton X dans le sidebar (le second est le backdrop)
+   const closeButtons = screen.getAllByRole('button', { name: /Close menu/i });
+    const closeButton = closeButtons[0];
     await user.click(closeButton);
     expect(sidebar).toHaveClass('-translate-x-full');
   });

@@ -1,4 +1,4 @@
-// OrderDetail.test.jsx
+// OrderDetail.test.jsx — corrigé (format des prix en Rs)
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
@@ -78,16 +78,15 @@ describe('OrderDetail', () => {
 
     await screen.findByText('Order #VEN-ORD-ABC123', {}, LOAD_TIMEOUT);
     expect(screen.getByText('Écran tactile interactif 65"')).toBeInTheDocument();
-    expect(screen.getByText('2 × 250 €')).toBeInTheDocument();
+    expect(screen.getByText('2 × Rs 250.00')).toBeInTheDocument();
 
-    // Utiliser getAllByText pour vérifier qu'il y a deux occurrences de "500 €"
-    const prices = screen.getAllByText('500 €');
+    // Utiliser getAllByText pour vérifier qu'il y a deux occurrences de "Rs 500.00"
+    const prices = screen.getAllByText('Rs 500.00');
     expect(prices).toHaveLength(2); // une pour le sous-total de l'item, une pour le total de la commande
 
     // Vérifier que le total est affiché dans la section "Total"
-    // On peut aussi vérifier la présence du mot "Total" et la valeur associée
     const totalSection = screen.getByText('Total').closest('div');
-    expect(within(totalSection).getByText('500 €')).toBeInTheDocument();
+    expect(within(totalSection).getByText('Rs 500.00')).toBeInTheDocument();
   });
 
   it('affiche le message 403 avec lien retour', async () => {
@@ -137,9 +136,6 @@ describe('OrderDetail', () => {
     await screen.findByText('Order placed successfully!', {}, LOAD_TIMEOUT);
     expect(screen.getByText('Order placed successfully!')).toBeInTheDocument();
 
-    // Vérifier que le state a été nettoyé : on va re-render avec le même state mais après que le navigate ait été appelé.
-    // Dans le code, navigate est appelé dans un effet avec un state vide, donc le state est effacé.
-    // On ne peut pas facilement tester cela dans ce contexte sans mocker navigate.
-    // On va simplement vérifier la présence initiale.
+    // Le state est nettoyé par navigate, ce qui n'est pas testé ici.
   });
 });

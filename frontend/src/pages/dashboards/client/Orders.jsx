@@ -1,29 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Boxes, ChevronLeft, ChevronRight, PackageSearch } from 'lucide-react';
+import { Boxes, PackageSearch } from 'lucide-react';
 import api from '../../../services/api';
+import { ORDER_STATUS } from '../../../constants/orderStatus';
+import { formatDate } from '../../../lib/formatDate';
+import { formatPrice } from '../../../lib/formatPrice';
+import Pagination from '../../../components/Pagination';
 
-const ORDER_STATUS = {
-  en_attente: { label: 'Pending', tone: 'bg-[#F7F7F7] text-[#707070]' },
-  validee: { label: 'Validated', tone: 'bg-[#ECB115]/20 text-[#8a6b0e]' },
-  expediee: { label: 'Shipped', tone: 'bg-[#000a1e]/10 text-[#000a1e]' },
-  livree: { label: 'Delivered', tone: 'bg-green-100 text-green-700' },
-  annulee: { label: 'Cancelled', tone: 'bg-red-100 text-[#C62221]' },
-};
-
-function formatPrice(value) {
-  const n = Number(value);
-  return Number.isFinite(n) ? `${n.toLocaleString('en-US')} €` : '—';
-}
-
-function formatDate(value) {
-  if (!value) return '—';
-  return new Date(value).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-}
 
 export default function Orders() {
   const [orders, setOrders] = useState(null);
@@ -122,30 +105,8 @@ export default function Orders() {
               })}
             </div>
 
-            {lastPage > 1 && (
-              <div className="mt-6 flex items-center justify-center gap-4">
-                <button
-                  type="button"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="flex items-center gap-1 rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm font-semibold text-[#707070] disabled:opacity-40"
-                >
-                  <ChevronLeft size={16} />
-                  Previous
-                </button>
-                <span className="text-sm text-[#707070]">
-                  Page {page} of {lastPage}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
-                  disabled={page === lastPage}
-                  className="flex items-center gap-1 rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm font-semibold text-[#707070] disabled:opacity-40"
-                >
-                  Next
-                  <ChevronRight size={16} />
-                </button>
-              </div>
+           {lastPage > 1 && (
+              <Pagination page={page} lastPage={lastPage} onPageChange={setPage} />
             )}
           </>
         )}

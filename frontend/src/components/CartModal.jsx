@@ -27,10 +27,13 @@ export default function CartModal({ isOpen, onClose }) {
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
-        onClick={onClose}
-      />
+    <button
+      type="button"
+      className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
+      onClick={onClose}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClose(); } }}
+      aria-label="Close cart"
+    />
 
       {/* Modal */}
       <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-50 shadow-lg flex flex-col animate-in slide-in-from-right duration-300">

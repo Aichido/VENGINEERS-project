@@ -121,7 +121,7 @@ describe('Orders', () => {
     // Utiliser `within` pour rechercher uniquement à l'intérieur de cette carte
     const withinLink = within(orderLink);
     expect(withinLink.getByText('Pending')).toBeInTheDocument();
-    expect(withinLink.getByText('500 €')).toBeInTheDocument();
+    expect(withinLink.getByText('Rs 500.00')).toBeInTheDocument();
     expect(withinLink.getByText(/1 Aug 2026/)).toBeInTheDocument();
     expect(withinLink.getByText(/1 item\(s\)/)).toBeInTheDocument();
   });

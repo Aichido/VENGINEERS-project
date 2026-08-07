@@ -2,28 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Boxes, AlertCircle } from 'lucide-react';
 import api from '../../../services/api';
-
-const ORDER_STATUS = {
-  en_attente: { label: 'Pending', tone: 'bg-[#F7F7F7] text-[#707070]' },
-  validee: { label: 'Validated', tone: 'bg-[#ECB115]/20 text-[#8a6b0e]' },
-  expediee: { label: 'Shipped', tone: 'bg-[#000a1e]/10 text-[#000a1e]' },
-  livree: { label: 'Delivered', tone: 'bg-green-100 text-green-700' },
-  annulee: { label: 'Cancelled', tone: 'bg-red-100 text-[#C62221]' },
-};
-
-function formatPrice(value) {
-  const n = Number(value);
-  return Number.isFinite(n) ? `${n.toLocaleString('en-US')} €` : '—';
-}
-
-function formatDate(value) {
-  if (!value) return '—';
-  return new Date(value).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
+import { ORDER_STATUS } from '../../../constants/orderStatus';
+import { formatDate } from '../../../lib/formatDate';
+import { formatPrice } from '../../../lib/formatPrice';
 
 export default function OrderDetail() {
   const { publicId } = useParams();
