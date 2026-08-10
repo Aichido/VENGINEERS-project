@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Loader2, BellRing, Check } from 'lucide-react';
 import api from '../../../services/api';
+import Pagination from '../../../components/Pagination';
 
 export default function Stock() {
   const [page, setPage] = useState(1);
@@ -115,23 +116,7 @@ export default function Stock() {
             </table>
           </div>
 
-          <div className="flex items-center justify-between text-sm text-[#707070]">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={!data.prev_page_url}
-              className="px-3 py-1.5 rounded-lg border border-[#e5e5e5] disabled:opacity-40"
-            >
-              Previous
-            </button>
-            <span>Page {data.current_page} of {data.last_page}</span>
-            <button
-              onClick={() => setPage((p) => p + 1)}
-              disabled={!data.next_page_url}
-              className="px-3 py-1.5 rounded-lg border border-[#e5e5e5] disabled:opacity-40"
-            >
-              Next
-            </button>
-          </div>
+         <Pagination page={page} lastPage={data.last_page} onPageChange={setPage} />
         </>
       )}
     </div>

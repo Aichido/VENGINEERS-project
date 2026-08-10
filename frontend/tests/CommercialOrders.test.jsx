@@ -117,11 +117,36 @@ describe('Commercial Orders page', () => {
     expect(await screen.findByText(/no orders found/i, {}, LOAD_TIMEOUT)).toBeInTheDocument();
   });
 
-  it('disables Previous on the first page and Next when there is no next page', async () => {
-    renderOrders();
-    await screen.findByText('#VEN-ORD-AAA11111', {}, LOAD_TIMEOUT);
+  it('does not render pagination when there is only one page', async () => {
+  renderOrders(); // makeOrdersResponse() par défaut a last_page: 1
+  await screen.findByText('#VEN-ORD-AAA11111', {}, LOAD_TIMEOUT);
 
-    expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
-  });
+  expect(screen.queryByRole('button', { name: 'Previous' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
+});
+
+it('disables Previous but not Next on the first page when there are multiple pages', async () => {
+  api.get.mockResolvedValue({ data: makeOrdersResponse({ last_page: 2 }) });
+
+  renderOrders();
+  await screen.findByText('#VEN-ORD-AAA11111', {}, LOAD_TIMEOUT);
+
+  expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Next' })).not.toBeDisabled();
+});
+
+it('requests the next page when Next is clicked', async () => {
+  api.get.mockResolvedValue({ data: makeOrdersResponse({ last_page: 2 }) });
+
+  renderOrders();
+  await screen.findByText('#VEN-ORD-AAA11111', {}, LOAD_TIMEOUT);
+
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: 'Next' }));
+
+  await waitFor(() => {
+    const lastCall = api.get.mock.calls.at(-1);
+    expect(lastCall[1].params.page).toBe(2);
+  }, LOAD_TIMEOUT);
+});
 });
