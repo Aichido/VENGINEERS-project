@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { DASHBOARD_PATH_BY_ROLE } from '../../constants/roles';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export default function Login() {
     setLoading(true);
     try {
       const user = await login(formData.email, formData.password);
-      navigate(user?.role?.name === 'client' ? '/client' : '/');
+      navigate(DASHBOARD_PATH_BY_ROLE[user?.role?.name] || '/');
     } catch (err) {
       if (err.response?.status === 401) {
         setError('Invalid email or password');

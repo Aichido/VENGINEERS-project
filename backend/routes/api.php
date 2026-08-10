@@ -43,11 +43,13 @@ Route::middleware(['auth:sanctum', 'role:commercial'])
     ->prefix('commercial')
     ->group(function () {
         Route::get('/orders', [CommercialOrderController::class, 'index']);
+        Route::get('/orders/{order}', [CommercialOrderController::class, 'show']); // ← nouveau
         Route::put('/orders/{order}', [CommercialOrderController::class, 'update']);
 
         Route::get('/stock', [StockController::class, 'index']);
         Route::post('/stock/{product}/notify-low-stock', [StockController::class, 'notifyLowStock']);
     });
+    
 //admin routes
 Route::middleware(['auth:sanctum', 'role:admin'])
     ->prefix('admin')

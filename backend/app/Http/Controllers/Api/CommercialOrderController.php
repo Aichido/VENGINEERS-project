@@ -13,6 +13,18 @@ use Illuminate\Validation\ValidationException;
 
 class CommercialOrderController extends Controller
 {
+    /**
+     * Transitions de statut autorisées. Une transition vers le même
+     * statut (idempotence) est toujours acceptée sans effet de bord.
+     */
+    private const ALLOWED_TRANSITIONS = [
+        'en_attente' => ['validee', 'annulee'],
+        'validee'    => ['expediee', 'annulee'],
+        'expediee'   => ['livree'],
+        'livree'     => [],
+        'annulee'    => [],
+    ];
+
     public function index(Request $request): JsonResponse
     {
         $query = Order::with('items.product', 'client');
@@ -26,13 +38,29 @@ class CommercialOrderController extends Controller
         return response()->json($orders);
     }
 
+    public function show(Request $request, Order $order): JsonResponse
+    {
+        $order->load('items.product', 'client', 'commercial');
+
+        return response()->json($order);
+    }
+
     public function update(UpdateOrderStatusRequest $request, Order $order): JsonResponse
     {
         $newStatus = $request->validated()['status'];
+        $currentStatus = $order->status;
 
-        DB::transaction(function () use ($order, $newStatus, $request) {
-            // Décrémentation du stock uniquement lors du premier passage à "validee"
-            if ($newStatus === 'validee' && $order->status !== 'validee') {
+        if ($newStatus !== $currentStatus
+            && ! in_array($newStatus, self::ALLOWED_TRANSITIONS[$currentStatus] ?? [], true)
+        ) {
+            throw ValidationException::withMessages([
+                'status' => "Transition de « {$currentStatus} » vers « {$newStatus} » non autorisée.",
+            ]);
+        }
+
+        DB::transaction(function () use ($order, $newStatus, $currentStatus, $request) {
+            // Passage à "validee" : décrémente le stock (une seule fois)
+            if ($newStatus === 'validee' && $currentStatus !== 'validee') {
                 foreach ($order->items as $item) {
                     $product = $item->product()->lockForUpdate()->first();
 
@@ -54,6 +82,23 @@ class CommercialOrderController extends Controller
                 }
 
                 $order->commercial_id = $request->user()->id;
+            }
+
+            // Annulation d'une commande déjà validée : restaure le stock
+            if ($newStatus === 'annulee' && $currentStatus === 'validee') {
+                foreach ($order->items as $item) {
+                    $product = $item->product()->lockForUpdate()->first();
+
+                    $product->increment('stock_qty', $item->qty);
+
+                    StockMovement::create([
+                        'product_id' => $product->id,
+                        'type'       => 'entree',
+                        'qty'        => $item->qty,
+                        'reason'     => "Annulation commande {$order->public_id}",
+                        'user_id'    => $request->user()->id,
+                    ]);
+                }
             }
 
             $order->status = $newStatus;

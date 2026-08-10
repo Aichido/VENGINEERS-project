@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import Login from '../src/pages/public/Login';
 import { useAuth } from '../src/context/AuthContext';
 
@@ -26,6 +26,23 @@ describe('Login', () => {
     return render(
       <MemoryRouter>
         <Login />
+      </MemoryRouter>
+    );
+  };
+
+  // Variante avec de vraies routes cibles, pour vérifier la destination
+  // réelle de navigate() selon DASHBOARD_PATH_BY_ROLE — pas seulement
+  // que login() a été appelé.
+  const renderLoginWithRoutes = () => {
+    useAuth.mockReturnValue({ login: mockLogin });
+    return render(
+      <MemoryRouter initialEntries={['/login']}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/client" element={<div>Client dashboard</div>} />
+          <Route path="/commercial" element={<div>Commercial dashboard</div>} />
+          <Route path="/" element={<div>Home page</div>} />
+        </Routes>
       </MemoryRouter>
     );
   };
@@ -114,5 +131,43 @@ describe('Login', () => {
 
     await user.click(toggleButton);
     expect(passwordInput).toHaveAttribute('type', 'password');
+  });
+
+  // ── Navigation par rôle (DASHBOARD_PATH_BY_ROLE) ────────────────────────
+
+  it('redirects to /client on the real router when the role is client', async () => {
+    const user = userEvent.setup();
+    mockLogin.mockResolvedValue({ role: { name: 'client' } });
+    renderLoginWithRoutes();
+
+    await user.type(screen.getByLabelText('Email'), 'test@example.com');
+    await user.type(screen.getByLabelText('Password'), 'password123');
+    await user.click(screen.getByRole('button', { name: /log in/i }));
+
+    expect(await screen.findByText('Client dashboard')).toBeInTheDocument();
+  });
+
+  it('redirects to /commercial on the real router when the role is commercial', async () => {
+    const user = userEvent.setup();
+    mockLogin.mockResolvedValue({ role: { name: 'commercial' } });
+    renderLoginWithRoutes();
+
+    await user.type(screen.getByLabelText('Email'), 'commercial@vengineers.net');
+    await user.type(screen.getByLabelText('Password'), 'vengineers@123');
+    await user.click(screen.getByRole('button', { name: /log in/i }));
+
+    expect(await screen.findByText('Commercial dashboard')).toBeInTheDocument();
+  });
+
+  it('falls back to home for a role without a dashboard yet (e.g. technicien)', async () => {
+    const user = userEvent.setup();
+    mockLogin.mockResolvedValue({ role: { name: 'technicien' } });
+    renderLoginWithRoutes();
+
+    await user.type(screen.getByLabelText('Email'), 'technicien@vengineers.net');
+    await user.type(screen.getByLabelText('Password'), 'vengineers@123');
+    await user.click(screen.getByRole('button', { name: /log in/i }));
+
+    expect(await screen.findByText('Home page')).toBeInTheDocument();
   });
 });

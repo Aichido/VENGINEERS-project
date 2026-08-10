@@ -195,3 +195,179 @@ it('rejects an invalid status value', function () {
         ])
         ->assertStatus(422);
 });
+
+it('shows order details for the commercial', function () {
+    [$client, $clientToken] = actingClientForCommercialTest();
+    $product = makeProductForCommercialTest();
+
+    $order = $this->withHeader('Authorization', "Bearer {$clientToken}")
+        ->postJson('/api/client/orders', ['items' => [['product_id' => $product->id, 'qty' => 1]]])
+        ->json();
+
+    $this->app['auth']->forgetGuards();
+
+    [$commercial, $commercialToken] = actingCommercial();
+
+    $response = $this->withHeader('Authorization', "Bearer {$commercialToken}")
+        ->getJson('/api/commercial/orders/' . rawurlencode($order['public_id']));
+
+    $response->assertStatus(200)
+        ->assertJsonPath('public_id', $order['public_id'])
+        ->assertJsonPath('client.id', $client->id);
+});
+
+it('rejects order detail view for a non-commercial role', function () {
+    [$client, $clientToken] = actingClientForCommercialTest();
+    $product = makeProductForCommercialTest();
+
+    $order = $this->withHeader('Authorization', "Bearer {$clientToken}")
+        ->postJson('/api/client/orders', ['items' => [['product_id' => $product->id, 'qty' => 1]]])
+        ->json();
+
+    $this->app['auth']->forgetGuards();
+
+    $this->withHeader('Authorization', "Bearer {$clientToken}")
+        ->getJson('/api/commercial/orders/' . rawurlencode($order['public_id']))
+        ->assertStatus(403);
+});
+
+it('cancels a pending order without touching stock', function () {
+    [$client, $clientToken] = actingClientForCommercialTest();
+    $product = makeProductForCommercialTest(['stock_qty' => 5]);
+
+    $order = $this->withHeader('Authorization', "Bearer {$clientToken}")
+        ->postJson('/api/client/orders', ['items' => [['product_id' => $product->id, 'qty' => 2]]])
+        ->json();
+
+    $this->app['auth']->forgetGuards();
+
+    [$commercial, $commercialToken] = actingCommercial();
+
+    $response = $this->withHeader('Authorization', "Bearer {$commercialToken}")
+        ->putJson('/api/commercial/orders/' . rawurlencode($order['public_id']), [
+            'status' => 'annulee',
+        ]);
+
+    $response->assertStatus(200)->assertJsonPath('status', 'annulee');
+
+    $this->assertDatabaseHas('products', ['id' => $product->id, 'stock_qty' => 5]);
+    $this->assertDatabaseCount('stock_movements', 0);
+});
+
+it('cancels a validated order and restores stock', function () {
+    [$client, $clientToken] = actingClientForCommercialTest();
+    $product = makeProductForCommercialTest(['stock_qty' => 5]);
+
+    $order = $this->withHeader('Authorization', "Bearer {$clientToken}")
+        ->postJson('/api/client/orders', ['items' => [['product_id' => $product->id, 'qty' => 2]]])
+        ->json();
+
+    $this->app['auth']->forgetGuards();
+
+    [$commercial, $commercialToken] = actingCommercial();
+
+    $this->withHeader('Authorization', "Bearer {$commercialToken}")
+        ->putJson('/api/commercial/orders/' . rawurlencode($order['public_id']), ['status' => 'validee']);
+
+    $this->assertDatabaseHas('products', ['id' => $product->id, 'stock_qty' => 3]);
+
+    $response = $this->withHeader('Authorization', "Bearer {$commercialToken}")
+        ->putJson('/api/commercial/orders/' . rawurlencode($order['public_id']), ['status' => 'annulee']);
+
+    $response->assertStatus(200)->assertJsonPath('status', 'annulee');
+
+    $this->assertDatabaseHas('products', ['id' => $product->id, 'stock_qty' => 5]);
+
+    $this->assertDatabaseHas('stock_movements', [
+        'product_id' => $product->id,
+        'type'       => 'entree',
+        'qty'        => 2,
+        'reason'     => "Annulation commande {$order['public_id']}",
+    ]);
+});
+
+it('ships a validated order', function () {
+    [$client, $clientToken] = actingClientForCommercialTest();
+    $product = makeProductForCommercialTest();
+
+    $order = $this->withHeader('Authorization', "Bearer {$clientToken}")
+        ->postJson('/api/client/orders', ['items' => [['product_id' => $product->id, 'qty' => 1]]])
+        ->json();
+
+    $this->app['auth']->forgetGuards();
+
+    [$commercial, $commercialToken] = actingCommercial();
+
+    $this->withHeader('Authorization', "Bearer {$commercialToken}")
+        ->putJson('/api/commercial/orders/' . rawurlencode($order['public_id']), ['status' => 'validee']);
+
+    $response = $this->withHeader('Authorization', "Bearer {$commercialToken}")
+        ->putJson('/api/commercial/orders/' . rawurlencode($order['public_id']), ['status' => 'expediee']);
+
+    $response->assertStatus(200)->assertJsonPath('status', 'expediee');
+});
+
+it('delivers a shipped order', function () {
+    [$client, $clientToken] = actingClientForCommercialTest();
+    $product = makeProductForCommercialTest();
+
+    $order = $this->withHeader('Authorization', "Bearer {$clientToken}")
+        ->postJson('/api/client/orders', ['items' => [['product_id' => $product->id, 'qty' => 1]]])
+        ->json();
+
+    $this->app['auth']->forgetGuards();
+
+    [$commercial, $commercialToken] = actingCommercial();
+
+    $this->withHeader('Authorization', "Bearer {$commercialToken}")
+        ->putJson('/api/commercial/orders/' . rawurlencode($order['public_id']), ['status' => 'validee']);
+    $this->withHeader('Authorization', "Bearer {$commercialToken}")
+        ->putJson('/api/commercial/orders/' . rawurlencode($order['public_id']), ['status' => 'expediee']);
+
+    $response = $this->withHeader('Authorization', "Bearer {$commercialToken}")
+        ->putJson('/api/commercial/orders/' . rawurlencode($order['public_id']), ['status' => 'livree']);
+
+    $response->assertStatus(200)->assertJsonPath('status', 'livree');
+});
+
+it('rejects an out-of-order transition', function () {
+    [$client, $clientToken] = actingClientForCommercialTest();
+    $product = makeProductForCommercialTest();
+
+    $order = $this->withHeader('Authorization', "Bearer {$clientToken}")
+        ->postJson('/api/client/orders', ['items' => [['product_id' => $product->id, 'qty' => 1]]])
+        ->json();
+
+    $this->app['auth']->forgetGuards();
+
+    [$commercial, $commercialToken] = actingCommercial();
+
+    // en_attente → expediee directement, sans passer par validee
+    $this->withHeader('Authorization', "Bearer {$commercialToken}")
+        ->putJson('/api/commercial/orders/' . rawurlencode($order['public_id']), ['status' => 'expediee'])
+        ->assertStatus(422);
+});
+
+it('rejects any transition from a terminal delivered order', function () {
+    [$client, $clientToken] = actingClientForCommercialTest();
+    $product = makeProductForCommercialTest();
+
+    $order = $this->withHeader('Authorization', "Bearer {$clientToken}")
+        ->postJson('/api/client/orders', ['items' => [['product_id' => $product->id, 'qty' => 1]]])
+        ->json();
+
+    $this->app['auth']->forgetGuards();
+
+    [$commercial, $commercialToken] = actingCommercial();
+
+    $this->withHeader('Authorization', "Bearer {$commercialToken}")
+        ->putJson('/api/commercial/orders/' . rawurlencode($order['public_id']), ['status' => 'validee']);
+    $this->withHeader('Authorization', "Bearer {$commercialToken}")
+        ->putJson('/api/commercial/orders/' . rawurlencode($order['public_id']), ['status' => 'expediee']);
+    $this->withHeader('Authorization', "Bearer {$commercialToken}")
+        ->putJson('/api/commercial/orders/' . rawurlencode($order['public_id']), ['status' => 'livree']);
+
+    $this->withHeader('Authorization', "Bearer {$commercialToken}")
+        ->putJson('/api/commercial/orders/' . rawurlencode($order['public_id']), ['status' => 'annulee'])
+        ->assertStatus(422);
+});

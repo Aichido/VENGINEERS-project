@@ -6,6 +6,7 @@ import {
   Wrench,
   ShoppingCart,
   Store,
+  Package,
   LogOut,
   Menu,
   X,
@@ -13,15 +14,27 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
-// Client-only navigation. Admin-specific items from the original mockup
-// (User Management, Product Catalog, System Logs, "Generate Report",
-// "Create Account") were removed — those belong to the future Admin
-// dashboard (Phase 6), not the Client space.
-const NAV_ITEMS = [
-  { to: '/client', label: 'Overview', icon: LayoutDashboard, end: true },
-  { to: '/client/orders', label: 'My Orders', icon: ShoppingBag },
-  { to: '/client/interventions', label: 'Interventions', icon: Wrench },
-];
+// Navigation par rôle. Les items Admin-only du mockup d'origine (User
+// Management, Product Catalog CRUD, System Logs, "Generate Report",
+// "Create Account") restent hors scope tant que la Phase 6 (Admin) n'est
+// pas commencée.
+const NAV_ITEMS_BY_ROLE = {
+  client: [
+    { to: '/client', label: 'Overview', icon: LayoutDashboard, end: true },
+    { to: '/client/orders', label: 'My Orders', icon: ShoppingBag },
+    { to: '/client/interventions', label: 'Interventions', icon: Wrench },
+  ],
+  commercial: [
+    { to: '/commercial', label: 'Overview', icon: LayoutDashboard, end: true },
+    { to: '/commercial/orders', label: 'Orders', icon: ShoppingBag },
+    { to: '/commercial/stock', label: 'Stock', icon: Package },
+  ],
+};
+
+const SPACE_LABEL_BY_ROLE = {
+  client: 'Client Space',
+  commercial: 'Commercial Space',
+};
 
 function initials(name = '') {
   return name
@@ -36,6 +49,10 @@ export default function DashboardLayout() {
   const { user, logout } = useAuth();
   const { totalItems } = useCart();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  const role = user?.role?.name;
+  const navItems = NAV_ITEMS_BY_ROLE[role] || [];
+  const spaceLabel = SPACE_LABEL_BY_ROLE[role] || 'Dashboard';
 
   const navLinkClasses = ({ isActive }) =>
     [
@@ -62,7 +79,7 @@ export default function DashboardLayout() {
               Vengineers
             </div>
             <div className="text-xs font-semibold uppercase tracking-wide text-[#707070]">
-              Client Space
+              {spaceLabel}
             </div>
           </div>
           <button
@@ -75,41 +92,38 @@ export default function DashboardLayout() {
         </div>
 
         <nav className="flex-grow space-y-1">
-          {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+          {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink key={to} to={to} end={end} className={navLinkClasses}>
               <Icon size={20} />
               <span>{label}</span>
             </NavLink>
           ))}
 
-          <NavLink to="/cart" className={navLinkClasses}>
-            <span className="relative">
-              <ShoppingCart size={20} />
-              {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#ECB115] text-[10px] font-bold text-black">
-                  {totalItems}
+          {/* Cart et Browse Catalog restent réservés au Client — un
+              Commercial ne passe pas commande pour lui-même. */}
+          {role === 'client' && (
+            <>
+              <NavLink to="/cart" className={navLinkClasses}>
+                <span className="relative">
+                  <ShoppingCart size={20} />
+                  {totalItems > 0 && (
+                    <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#ECB115] text-[10px] font-bold text-black">
+                      {totalItems}
+                    </span>
+                  )}
                 </span>
-              )}
-            </span>
-            <span>Cart</span>
-          </NavLink>
+                <span>Cart</span>
+              </NavLink>
 
-          <NavLink to="/products" className={navLinkClasses}>
-            <Store size={20} />
-            <span>Browse Catalog</span>
-          </NavLink>
+              <NavLink to="/products" className={navLinkClasses}>
+                <Store size={20} />
+                <span>Browse Catalog</span>
+              </NavLink>
+            </>
+          )}
         </nav>
 
         <div className="mt-4 space-y-1 border-t border-[#e5e5e5] pt-4">
-          {/* No account-settings endpoint yet — placeholder like the
-              "forgot password" link on Login, to wire up in a later phase. */}
-          {/* <a
-            href="#"
-            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold text-[#707070] hover:text-black hover:bg-[#F7F7F7] transition-colors"
-          >
-            <Settings size={20} />
-            <span>Settings</span>
-          </a> */}
           <button
             onClick={logout}
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold text-[#707070] hover:text-black hover:bg-[#F7F7F7] transition-colors"
