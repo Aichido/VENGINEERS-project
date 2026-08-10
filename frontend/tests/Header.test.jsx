@@ -103,6 +103,26 @@ describe('Header', () => {
     expect(link).toHaveAttribute('href', '/client');
   });
 
+  // --- NOUVEAU : rôle commercial (Phase 4) ---
+  it('renders "My Space" link pointing to /commercial when user role is commercial', () => {
+    const user = { role: { name: 'commercial' } };
+    renderHeader(user);
+    const mySpaceLinks = screen.getAllByRole('link', { name: /My Space/i });
+    expect(mySpaceLinks).toHaveLength(1);
+    const link = mySpaceLinks[0];
+    expect(link).toHaveAttribute('href', '/commercial');
+  });
+
+  // --- NOUVEAU : rôle sans dashboard encore implémenté (technicien/admin) ---
+  it('falls back to "/" for a role without a dashboard yet (e.g. technicien)', () => {
+    const user = { role: { name: 'technicien' } };
+    renderHeader(user);
+    const mySpaceLinks = screen.getAllByRole('link', { name: /My Space/i });
+    expect(mySpaceLinks).toHaveLength(1);
+    const link = mySpaceLinks[0];
+    expect(link).toHaveAttribute('href', '/');
+  });
+
   // --- CORRECTION ICI : un seul lien attendu ---
   it('renders "Request a Quote" link when user is not logged in', () => {
     renderHeader(null);

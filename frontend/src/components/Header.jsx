@@ -5,6 +5,7 @@ import { Menu, X, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import CartModal from './CartModal';
+import { DASHBOARD_PATH_BY_ROLE } from '../constants/roles';
 
 const COLORS = {
   primary: '#BC0100',
@@ -46,7 +47,7 @@ export default function Header() {
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const isActive = (to) => location.pathname === to;
-  const dashboardPath = user?.role?.name === 'client' ? '/client' : '/';
+  const dashboardPath = DASHBOARD_PATH_BY_ROLE[user?.role?.name] || '/';
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">

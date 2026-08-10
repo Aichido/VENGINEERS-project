@@ -23,6 +23,13 @@ import InterventionNew from './pages/dashboards/client/InterventionNew'
 import Orders from './pages/dashboards/client/Orders'
 import OrderDetail from './pages/dashboards/client/OrderDetail'
 
+// Dashboard comm
+// Dashboard Commercial (Phase 4)
+import CommercialDashboard from './pages/dashboards/commercial/CommercialDashboard';
+import CommercialOrders from './pages/dashboards/commercial/Orders';
+import CommercialStock from './pages/dashboards/commercial/Stock';
+import CommercialOrderDetail from './pages/dashboards/commercial/OrderDetail';
+
 function App() {
   return (
     <AuthProvider>
@@ -47,6 +54,15 @@ function App() {
              <Route path="/client/interventions/new" element={<InterventionNew />} />
              <Route path="/client/orders" element={<Orders />} />
               <Route path="/client/orders/:publicId" element={<OrderDetail />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['commercial']} />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="/commercial" element={<CommercialDashboard />} />
+            <Route path="/commercial/orders" element={<CommercialOrders />} />
+            <Route path="/commercial/stock" element={<CommercialStock />} />
+            <Route path="/commercial/orders/:publicId" element={<CommercialOrderDetail />} />
           </Route>
         </Route>
         {/*
