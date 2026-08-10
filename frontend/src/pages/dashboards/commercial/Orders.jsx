@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import api from '../../../services/api';
 import{ STATUS_TABS , STATUS_BADGE} from '../../../constants/commercialStatus'
 import { Link } from 'react-router-dom'; // ← ajouter à l'import existant
+import Pagination from '../../../components/Pagination';
 
 export default function Orders() {
   const [status, setStatus] = useState('');
@@ -12,7 +13,7 @@ export default function Orders() {
   const [error, setError] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
   const [rowError, setRowError] = useState({});
-  
+
 useEffect(() => {
   let cancelled = false;
   // eslint-disable-next-line react-hooks/set-state-in-effect -- déclenche le chargement suite à un changement de statut/page, pas de cascade de rendus réelle ici
@@ -140,23 +141,7 @@ useEffect(() => {
             </div>
           )}
 
-          <div className="flex items-center justify-between text-sm text-[#707070]">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={!data.prev_page_url}
-              className="px-3 py-1.5 rounded-lg border border-[#e5e5e5] disabled:opacity-40"
-            >
-              Previous
-            </button>
-            <span>Page {data.current_page} of {data.last_page}</span>
-            <button
-              onClick={() => setPage((p) => p + 1)}
-              disabled={!data.next_page_url}
-              className="px-3 py-1.5 rounded-lg border border-[#e5e5e5] disabled:opacity-40"
-            >
-              Next
-            </button>
-          </div>
+          <Pagination page={page} lastPage={data.last_page} onPageChange={setPage} />
         </>
       )}
     </div>
