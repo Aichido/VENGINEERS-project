@@ -88,3 +88,128 @@ it('has a null technicien when not yet assigned', function () {
 
     expect($intervention->technicien)->toBeNull();
 });
+it('generates a public_id with the correct prefix on creation', function () {
+    $clientRole = Role::firstOrCreate(['name' => 'client']);
+    $client = User::factory()->create(['role_id' => $clientRole->id]);
+
+    $intervention = Intervention::create([
+        'client_id'   => $client->id,
+        'titre'       => 'Test',
+        'description' => 'Test',
+        'statut'      => 'nouvelle',
+        'priorite'    => 'normale',
+    ]);
+
+    expect($intervention->public_id)->toStartWith('#VEN-INT-');
+    expect(strlen($intervention->public_id))->toBe(strlen('#VEN-INT-') + 8);
+});
+
+it('generates unique public_ids across multiple interventions', function () {
+    $clientRole = Role::firstOrCreate(['name' => 'client']);
+    $client = User::factory()->create(['role_id' => $clientRole->id]);
+
+    $publicIds = collect(range(1, 5))->map(fn () => Intervention::create([
+        'client_id'   => $client->id,
+        'titre'       => 'Test',
+        'description' => 'Test',
+        'statut'      => 'nouvelle',
+        'priorite'    => 'normale',
+    ])->public_id);
+
+    expect($publicIds->unique())->toHaveCount(5);
+});
+
+it('uses public_id as the route key', function () {
+    $clientRole = Role::firstOrCreate(['name' => 'client']);
+    $client = User::factory()->create(['role_id' => $clientRole->id]);
+
+    $intervention = Intervention::create([
+        'client_id'   => $client->id,
+        'titre'       => 'Test',
+        'description' => 'Test',
+        'statut'      => 'nouvelle',
+        'priorite'    => 'normale',
+    ]);
+
+    expect($intervention->getRouteKeyName())->toBe('public_id');
+});
+
+it('has many reports', function () {
+    $clientRole = Role::firstOrCreate(['name' => 'client']);
+    $technicienRole = Role::firstOrCreate(['name' => 'technicien']);
+    $client = User::factory()->create(['role_id' => $clientRole->id]);
+    $technicien = User::factory()->create(['role_id' => $technicienRole->id]);
+
+    $intervention = Intervention::create([
+        'client_id'     => $client->id,
+        'technicien_id' => $technicien->id,
+        'titre'         => 'Test',
+        'description'   => 'Test',
+        'statut'        => 'en_cours',
+        'priorite'      => 'normale',
+    ]);
+
+    \App\Models\InterventionReport::create([
+        'intervention_id' => $intervention->id,
+        'technicien_id'   => $technicien->id,
+        'contenu'         => 'Rapport 1',
+        'fichier_path'    => 'intervention-reports/one.pdf',
+    ]);
+
+    \App\Models\InterventionReport::create([
+        'intervention_id' => $intervention->id,
+        'technicien_id'   => $technicien->id,
+        'contenu'         => 'Rapport 2',
+        'fichier_path'    => 'intervention-reports/two.pdf',
+    ]);
+
+    expect($intervention->reports)->toHaveCount(2);
+    expect($intervention->reports->first())->toBeInstanceOf(\App\Models\InterventionReport::class);
+});
+
+it('deletes reports when the intervention is deleted', function () {
+    $clientRole = Role::firstOrCreate(['name' => 'client']);
+    $technicienRole = Role::firstOrCreate(['name' => 'technicien']);
+    $client = User::factory()->create(['role_id' => $clientRole->id]);
+    $technicien = User::factory()->create(['role_id' => $technicienRole->id]);
+
+    $intervention = Intervention::create([
+        'client_id'     => $client->id,
+        'technicien_id' => $technicien->id,
+        'titre'         => 'Test',
+        'description'   => 'Test',
+        'statut'        => 'en_cours',
+        'priorite'      => 'normale',
+    ]);
+
+    $report = \App\Models\InterventionReport::create([
+        'intervention_id' => $intervention->id,
+        'technicien_id'   => $technicien->id,
+        'contenu'         => 'Rapport',
+        'fichier_path'    => 'intervention-reports/one.pdf',
+    ]);
+
+    $intervention->delete();
+
+    $this->assertDatabaseMissing('intervention_reports', ['id' => $report->id]);
+});
+
+it('sets technicien_id to null on the intervention when the technicien is deleted', function () {
+    $clientRole = Role::firstOrCreate(['name' => 'client']);
+    $technicienRole = Role::firstOrCreate(['name' => 'technicien']);
+    $client = User::factory()->create(['role_id' => $clientRole->id]);
+    $technicien = User::factory()->create(['role_id' => $technicienRole->id]);
+
+    $intervention = Intervention::create([
+        'client_id'     => $client->id,
+        'technicien_id' => $technicien->id,
+        'titre'         => 'Test',
+        'description'   => 'Test',
+        'statut'        => 'assignee',
+        'priorite'      => 'normale',
+    ]);
+
+    $technicien->delete();
+
+    expect($intervention->fresh()->technicien_id)->toBeNull();
+});

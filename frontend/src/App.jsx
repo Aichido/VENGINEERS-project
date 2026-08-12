@@ -23,12 +23,17 @@ import InterventionNew from './pages/dashboards/client/InterventionNew'
 import Orders from './pages/dashboards/client/Orders'
 import OrderDetail from './pages/dashboards/client/OrderDetail'
 
-// Dashboard comm
 // Dashboard Commercial (Phase 4)
 import CommercialDashboard from './pages/dashboards/commercial/CommercialDashboard';
 import CommercialOrders from './pages/dashboards/commercial/Orders';
 import CommercialStock from './pages/dashboards/commercial/Stock';
 import CommercialOrderDetail from './pages/dashboards/commercial/OrderDetail';
+
+// Dashboard Technicien (Phase 5)
+import TechnicienDashboard from './pages/dashboards/technicien/TechnicienDashboard';
+import TechnicienInterventions from './pages/dashboards/technicien/Interventions';
+import TechnicienInterventionDetail from './pages/dashboards/technicien/InterventionDetail';
+import TechnicienReportHistory from './pages/dashboards/technicien/ReportHistory';
 
 function App() {
   return (
@@ -65,21 +70,18 @@ function App() {
             <Route path="/commercial/orders/:publicId" element={<CommercialOrderDetail />} />
           </Route>
         </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['technicien']} />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="/technicien" element={<TechnicienDashboard />} />
+            <Route path="/technicien/interventions" element={<TechnicienInterventions />} />
+            <Route path="/technicien/interventions/:publicId" element={<TechnicienInterventionDetail />} />
+            <Route path="/technicien/reports" element={<TechnicienReportHistory />} />
+          </Route>
+        </Route>
+
         {/*
-          Dashboards privés (Phases 3 à 6) — à activer au fur et à mesure :
-
-
-          <Route element={<ProtectedRoute allowedRoles={['commercial']} />}>
-            <Route element={<DashboardLayout />}>
-              <Route path="commercial/*" element={<CommercialDashboard />} />
-            </Route>
-          </Route>
-
-          <Route element={<ProtectedRoute allowedRoles={['technicien']} />}>
-            <Route element={<DashboardLayout />}>
-              <Route path="technicien/*" element={<TechnicienDashboard />} />
-            </Route>
-          </Route>
+          Dashboards privés restants (Phase 6) — à activer au fur et à mesure :
 
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route element={<DashboardLayout />}>
