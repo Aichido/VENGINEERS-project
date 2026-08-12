@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Intervention extends Model
 {
@@ -52,5 +53,14 @@ class Intervention extends Model
     public function technicien(): BelongsTo
     {
         return $this->belongsTo(User::class, 'technicien_id');
+    }
+    public function getRouteKeyName(): string
+    {
+        return 'public_id';
+    }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(InterventionReport::class);
     }
 }

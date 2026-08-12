@@ -10,6 +10,9 @@ use App\Http\Controllers\Api\InterventionController;
 use App\Http\Controllers\Api\CommercialOrderController;
 use App\Http\Controllers\Api\StockController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\Admin\InterventionAssignmentController;
+use App\Http\Controllers\Api\Technicien\InterventionController as TechnicienInterventionController;
+
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -57,4 +60,16 @@ Route::middleware(['auth:sanctum', 'role:admin'])
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
         Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+      Route::post('/interventions/{intervention}/assign', [InterventionAssignmentController::class, 'assign']);
+    });
+    
+    // technicien routes
+Route::middleware(['auth:sanctum', 'role:technicien'])
+    ->prefix('technicien')
+    ->group(function () {
+        Route::get('/interventions', [TechnicienInterventionController::class, 'index']);
+        Route::get('/interventions/{intervention}', [TechnicienInterventionController::class, 'show']);
+        Route::put('/interventions/{intervention}', [TechnicienInterventionController::class, 'update']);
+        Route::post('/interventions/{intervention}/report', [TechnicienInterventionController::class, 'storeReport']);
+        Route::get('/reports', [TechnicienInterventionController::class, 'reports']);
     });

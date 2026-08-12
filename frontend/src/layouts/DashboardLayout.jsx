@@ -7,6 +7,7 @@ import {
   ShoppingCart,
   Store,
   Package,
+  ClipboardList,
   LogOut,
   Menu,
   X,
@@ -29,12 +30,19 @@ const NAV_ITEMS_BY_ROLE = {
     { to: '/commercial/orders', label: 'Orders', icon: ShoppingBag },
     { to: '/commercial/stock', label: 'Stock', icon: Package },
   ],
+  technicien: [
+    { to: '/technicien', label: 'Overview', icon: LayoutDashboard, end: true },
+    { to: '/technicien/interventions', label: 'Interventions', icon: Wrench },
+    { to: '/technicien/reports', label: 'Report History', icon: ClipboardList },
+  ],
 };
-
+ 
 const SPACE_LABEL_BY_ROLE = {
   client: 'Client Space',
   commercial: 'Commercial Space',
+  technicien: 'Technician Space',
 };
+
 
 function initials(name = '') {
   return name
