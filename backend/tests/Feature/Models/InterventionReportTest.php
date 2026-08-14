@@ -94,7 +94,7 @@ it('is deleted when its intervention is deleted', function () {
     $this->assertDatabaseMissing('intervention_reports', ['id' => $report->id]);
 });
 
-it('is deleted when its technicien is deleted', function () {
+it('conserve le rapport meme apres soft delete du technicien auteur', function () {
     [$intervention, $technicien] = makeInterventionForReportModelTest();
 
     $report = InterventionReport::create([
@@ -104,7 +104,9 @@ it('is deleted when its technicien is deleted', function () {
         'fichier_path'    => 'intervention-reports/one.pdf',
     ]);
 
-    $technicien->delete();
+    $technicien->delete(); // soft delete — historique preserve (decision Phase 6.1)
 
-    $this->assertDatabaseMissing('intervention_reports', ['id' => $report->id]);
+    // le rapport reste en base, non supprime physiquement
+    $this->assertDatabaseHas('intervention_reports', ['id' => $report->id]);
+    expect($report->fresh()->technicien_id)->toBe($technicien->id);
 });

@@ -45,14 +45,14 @@ class Intervention extends Model
         return $publicId;
     }
 
-    public function client(): BelongsTo
+   public function client(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'client_id');
+        return $this->belongsTo(User::class, 'client_id')->withTrashed();
     }
 
     public function technicien(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'technicien_id');
+        return $this->belongsTo(User::class, 'technicien_id')->withTrashed();
     }
     public function getRouteKeyName(): string
     {

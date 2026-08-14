@@ -14,9 +14,9 @@ class InterventionAssignmentController extends Controller
 {
     public function assign(AssignInterventionRequest $request, Intervention $intervention): JsonResponse
     {
-        if ($intervention->statut !== 'nouvelle') {
+        if (!in_array($intervention->statut, ['nouvelle', 'assignee'], true)) {
             throw ValidationException::withMessages([
-                'statut' => ["Cette intervention n'est plus au statut 'nouvelle' et ne peut pas être assignée."],
+                'statut' => ["Réassignation impossible : l'intervention est au statut '{$intervention->statut}' (autorisé uniquement pour 'nouvelle' ou 'assignee')."],
             ]);
         }
 

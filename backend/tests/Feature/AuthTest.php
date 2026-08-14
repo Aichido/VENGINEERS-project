@@ -21,7 +21,7 @@ function createUserWithRole(string $roleName, array $overrides = []): User
 
     return User::factory()->create(array_merge([
         'role_id' => $role->id,
-        'password' => Hash::make('password123'),
+        'password' => Hash::make('Test@1234'),
     ], $overrides));
 }
 
@@ -34,8 +34,8 @@ test('register force le rôle client même si un autre rôle est envoyé', funct
     $response = $this->postJson('/api/register', [
         'name' => 'Jean Dupont',
         'email' => 'jean.dupont@example.com',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
+        'password' => 'Test@1234',
+        'password_confirmation' => 'Test@1234',
         'role_id' => $adminRole->id, // tentative de forcer le rôle admin
     ]);
 
@@ -56,12 +56,12 @@ test('register force le rôle client même si un autre rôle est envoyé', funct
 test('login réussit avec le bon mot de passe et retourne user + token', function () {
     $user = createUserWithRole('client', [
         'email' => 'client@example.com',
-        'password' => Hash::make('password123'),
+        'password' => Hash::make('Test@1234'),
     ]);
 
     $response = $this->postJson('/api/login', [
         'email' => 'client@example.com',
-        'password' => 'password123',
+        'password' => 'Test@1234',
     ]);
 
     $response->assertStatus(200)
@@ -77,7 +77,7 @@ test('login réussit avec le bon mot de passe et retourne user + token', functio
 test('login échoue avec un mauvais mot de passe', function () {
     createUserWithRole('client', [
         'email' => 'client2@example.com',
-        'password' => Hash::make('password123'),
+        'password' => Hash::make('Test@1234'),
     ]);
 
     $response = $this->postJson('/api/login', [
@@ -124,8 +124,8 @@ test('un admin peut créer un compte commercial', function () {
         ->postJson('/api/admin/users', [
             'name' => 'Nouveau Commercial',
             'email' => 'commercial@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Test@1234',
+            'password_confirmation' => 'Test@1234',
             'role' => 'commercial',
         ]);
 
@@ -147,8 +147,8 @@ test('un client ne peut pas créer un compte admin (403 Accès refusé)', functi
         ->postJson('/api/admin/users', [
             'name' => 'Tentative Admin',
             'email' => 'fauxadmin@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Test@1234',
+            'password_confirmation' => 'Test@1234',
             'role' => 'admin',
         ]);
 
