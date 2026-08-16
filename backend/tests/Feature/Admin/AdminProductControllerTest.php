@@ -316,3 +316,48 @@ it('refuse le upload dimage a un non-admin', function () {
 
     $response->assertForbidden();
 });
+it('filtre les produits par categorie', function () {
+    $admin = actingAdminForProductTest();
+    $token = $admin->createToken('test')->plainTextToken;
+
+    $categorie1 = Category::factory()->create();
+    $categorie2 = Category::factory()->create();
+    Product::factory()->create(['category_id' => $categorie1->id]);
+    Product::factory()->create(['category_id' => $categorie2->id]);
+
+    $response = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/admin/products?category={$categorie1->id}");
+
+    $response->assertOk();
+    expect($response->json('total'))->toBe(1);
+});
+
+it('filtre les produits par recherche sur le nom', function () {
+    $admin = actingAdminForProductTest();
+    $token = $admin->createToken('test')->plainTextToken;
+
+    Product::factory()->create(['name' => 'Écran Dell 65']);
+    Product::factory()->create(['name' => 'Vidéoprojecteur Epson']);
+
+    $response = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/admin/products?search=Dell');
+
+    $response->assertOk();
+    expect($response->json('total'))->toBe(1);
+});
+
+it('rejette set-primary sur une image nappartenant pas au produit', function () {
+    Storage::fake('public');
+
+    $admin = actingAdminForProductTest();
+    $token = $admin->createToken('test')->plainTextToken;
+
+    $productA = Product::factory()->create();
+    $productB = Product::factory()->create();
+    $image = ProductImage::factory()->create(['product_id' => $productA->id]);
+
+    $response = $this->withHeader('Authorization', "Bearer {$token}")
+        ->patchJson("/api/admin/products/{$productB->id}/images/{$image->id}/set-primary");
+
+    $response->assertNotFound();
+});

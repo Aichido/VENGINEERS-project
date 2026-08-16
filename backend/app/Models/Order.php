@@ -23,17 +23,15 @@ class Order extends Model
     protected $casts = [
         'total' => 'decimal:2',
     ];
-
     public function client(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'client_id');
+        return $this->belongsTo(User::class, 'client_id')->withTrashed();
     }
 
     public function commercial(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'commercial_id');
+        return $this->belongsTo(User::class, 'commercial_id')->withTrashed();
     }
-
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);

@@ -15,6 +15,9 @@ use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Api\Admin\InterventionController as AdminInterventionController;
+use App\Http\Controllers\Api\Admin\StatsController as AdminStatsController;
+
+use App\Http\Controllers\Api\InterventionReportDownloadController;
 
 
 
@@ -24,6 +27,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+     Route::get('/interventions/{intervention}/reports/{report}/download', [InterventionReportDownloadController::class, 'download']);
 
 });
 //client routes
@@ -91,6 +95,9 @@ Route::middleware(['auth:sanctum', 'role:admin'])
         // Nouveau (6.3)
         Route::get('/interventions', [AdminInterventionController::class, 'index']);
         Route::post('/interventions', [AdminInterventionController::class, 'store']);
+
+        //6.4 stats
+        Route::get('/stats', [AdminStatsController::class, 'index']);
     });
     
     // technicien routes
