@@ -48,4 +48,11 @@ class InterventionController extends Controller
 
         return response()->json($intervention->load('client'), 201);
     }
+    public function reports(Intervention $intervention): JsonResponse
+    {
+        return response()->json(
+            $intervention->reports()->with('technicien')->latest()->get()
+        );
+    }
+
 }

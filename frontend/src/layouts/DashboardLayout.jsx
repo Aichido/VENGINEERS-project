@@ -11,9 +11,12 @@ import {
   LogOut,
   Menu,
   X,
+  Users,
+ FolderTree,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+
 
 // Navigation par rôle. Les items Admin-only du mockup d'origine (User
 // Management, Product Catalog CRUD, System Logs, "Generate Report",
@@ -35,12 +38,21 @@ const NAV_ITEMS_BY_ROLE = {
     { to: '/technicien/interventions', label: 'Interventions', icon: Wrench },
     { to: '/technicien/reports', label: 'Report History', icon: ClipboardList },
   ],
-};
+  admin: [
+    { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
+    { to: '/admin/users', label: 'Users', icon: Users },
+    { to: '/admin/products', label: 'Products', icon: Package },
+    { to: '/admin/categories', label: 'Categories', icon: FolderTree },
+    { to: '/admin/interventions', label: 'Interventions', icon: Wrench },
+    { to: '/admin/reports', label: 'Reports', icon: ClipboardList },
+  ],
+ };
  
 const SPACE_LABEL_BY_ROLE = {
   client: 'Client Space',
   commercial: 'Commercial Space',
   technicien: 'Technician Space',
+  admin: 'Admin Space',
 };
 
 

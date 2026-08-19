@@ -95,6 +95,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])
         // Nouveau (6.3)
         Route::get('/interventions', [AdminInterventionController::class, 'index']);
         Route::post('/interventions', [AdminInterventionController::class, 'store']);
+        Route::get('/interventions/{intervention}/reports', [AdminInterventionController::class, 'reports']);
 
         //6.4 stats
         Route::get('/stats', [AdminStatsController::class, 'index']);

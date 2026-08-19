@@ -7,6 +7,15 @@ import ClientDashboard from '../src/pages/dashboards/client/ClientDashboard';
 import api from '../src/services/api';
 import { useAuth } from '../src/context/AuthContext';
 
+// Génère une date ISO relative à "maintenant", pour que les tests basés sur
+// des fenêtres glissantes (ex. "livré dans les 30 derniers jours") restent
+// stables indépendamment du jour où la suite est exécutée.
+function daysAgo(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString();
+}
+
 vi.mock('../src/services/api', () => ({
   default: {
     get: vi.fn(),
@@ -26,8 +35,8 @@ const mockOrders = [
     public_id: '#VEN-ORD-ABC123',
     status: 'en_attente',
     total: '500.00',
-    created_at: '2026-08-01T10:00:00.000000Z',
-    updated_at: '2026-08-01T10:00:00.000000Z',
+    created_at: daysAgo(1),
+    updated_at: daysAgo(1),
     items: [{ id: 1, product_id: 1, qty: 2, unit_price: '250.00' }],
   },
   {
@@ -35,8 +44,8 @@ const mockOrders = [
     public_id: '#VEN-ORD-DEF456',
     status: 'livree',
     total: '1200.00',
-    created_at: '2026-07-15T10:00:00.000000Z',
-    updated_at: '2026-07-20T10:00:00.000000Z',
+    created_at: daysAgo(45), // hors des 30 derniers jours : n'affecte pas le compteur "Delivered (30d)"
+    updated_at: daysAgo(10), // livrée il y a 10 jours : reste dans la fenêtre de 30 jours quel que soit le jour d'exécution
     items: [{ id: 2, product_id: 2, qty: 1, unit_price: '1200.00' }],
   },
 ];
