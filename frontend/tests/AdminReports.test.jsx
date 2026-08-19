@@ -52,9 +52,8 @@ describe('Admin Reports', () => {
       if (url === '/admin/interventions/%23VEN-INT-DONE001/reports') return Promise.resolve({ data: mockReports });
       return Promise.resolve({ data: {} });
     });
-
-    global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
-    global.URL.revokeObjectURL = vi.fn();
+    globalThis.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
+    globalThis.URL.revokeObjectURL = vi.fn();
   });
 
   it('loads and displays completed interventions by default', async () => {
@@ -126,7 +125,7 @@ describe('Admin Reports', () => {
       );
     }, LOAD_TIMEOUT);
 
-    expect(global.URL.createObjectURL).toHaveBeenCalled();
+  expect(globalThis.URL.createObjectURL).toHaveBeenCalled();
   });
 
   it('shows an error toast if a report download fails', async () => {
