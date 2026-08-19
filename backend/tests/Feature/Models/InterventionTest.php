@@ -194,7 +194,7 @@ it('deletes reports when the intervention is deleted', function () {
     $this->assertDatabaseMissing('intervention_reports', ['id' => $report->id]);
 });
 
-it('sets technicien_id to null on the intervention when the technicien is deleted', function () {
+it('conserve technicien_id sur l\'intervention meme apres soft delete du technicien', function () {
     $clientRole = Role::firstOrCreate(['name' => 'client']);
     $technicienRole = Role::firstOrCreate(['name' => 'technicien']);
     $client = User::factory()->create(['role_id' => $clientRole->id]);
@@ -209,7 +209,15 @@ it('sets technicien_id to null on the intervention when the technicien is delete
         'priorite'      => 'normale',
     ]);
 
-    $technicien->delete();
+    $technicien->delete(); // soft delete — historique preserve (decision Phase 6.1)
 
-    expect($intervention->fresh()->technicien_id)->toBeNull();
+    // technicien_id reste renseigne, pas mis a null par une contrainte FK
+    expect($intervention->fresh()->technicien_id)->toBe($technicien->id);
+
+    // la relation reste resolvable via withTrashed()
+    expect($intervention->fresh()->technicien)->not->toBeNull();
+    expect($intervention->fresh()->technicien->id)->toBe($technicien->id);
+
+    // mais le technicien n'apparait plus dans les requetes standard (soft-delete actif)
+    expect(User::find($technicien->id))->toBeNull();
 });

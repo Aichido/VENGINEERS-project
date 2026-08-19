@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ContactController;
@@ -12,6 +11,14 @@ use App\Http\Controllers\Api\StockController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\Admin\InterventionAssignmentController;
 use App\Http\Controllers\Api\Technicien\InterventionController as TechnicienInterventionController;
+use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Api\Admin\InterventionController as AdminInterventionController;
+use App\Http\Controllers\Api\Admin\StatsController as AdminStatsController;
+
+use App\Http\Controllers\Api\InterventionReportDownloadController;
+
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -20,10 +27,8 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+     Route::get('/interventions/{intervention}/reports/{report}/download', [InterventionReportDownloadController::class, 'download']);
 
-    Route::middleware('role:admin')->group(function () {
-        Route::post('/admin/users', [UserController::class, 'store']);
-    });
 });
 //client routes
 Route::middleware(['auth:sanctum', 'role:client'])
@@ -61,6 +66,39 @@ Route::middleware(['auth:sanctum', 'role:admin'])
         Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
         Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
       Route::post('/interventions/{intervention}/assign', [InterventionAssignmentController::class, 'assign']);
+
+       // CRUD utilisateurs (Phase 6.1)
+        Route::get('/users', [AdminUserController::class, 'index']);
+        Route::post('/users', [AdminUserController::class, 'store']);
+        Route::put('/users/{user}', [AdminUserController::class, 'update']);
+        Route::patch('/users/{user}/toggle-active', [AdminUserController::class, 'toggleActive']);
+        Route::delete('/users/{user}', [AdminUserController::class, 'destroy']);
+
+           // Catégories (6.2)
+        Route::post('/categories', [AdminCategoryController::class, 'store']);
+        Route::put('/categories/{category}', [AdminCategoryController::class, 'update']);
+        Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy']);
+
+        // Produits (6.2)
+        Route::get('/products', [AdminProductController::class, 'index']);
+        Route::post('/products', [AdminProductController::class, 'store']);
+        Route::put('/products/{product}', [AdminProductController::class, 'update']);
+        Route::delete('/products/{product}', [AdminProductController::class, 'destroy']);
+
+        // Images produit (6.2)
+        Route::post('/products/{product}/images', [AdminProductController::class, 'storeImage']);
+        Route::delete('/products/{product}/images/{image}', [AdminProductController::class, 'destroyImage']);
+        Route::patch('/products/{product}/images/{image}/set-primary', [AdminProductController::class, 'setPrimaryImage']);
+        Route::patch('/products/{product}/images/reorder', [AdminProductController::class, 'reorderImages']);
+
+
+        // Nouveau (6.3)
+        Route::get('/interventions', [AdminInterventionController::class, 'index']);
+        Route::post('/interventions', [AdminInterventionController::class, 'store']);
+        Route::get('/interventions/{intervention}/reports', [AdminInterventionController::class, 'reports']);
+
+        //6.4 stats
+        Route::get('/stats', [AdminStatsController::class, 'index']);
     });
     
     // technicien routes

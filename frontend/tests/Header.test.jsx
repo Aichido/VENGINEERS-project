@@ -123,13 +123,13 @@ describe('Header', () => {
     expect(link).toHaveAttribute('href', '/technicien');
   });
     // --- NOUVEAU : rôle sans dashboard encore implémenté (technicien/admin) ---
-  it('falls back to "/" for a role without a dashboard yet (e.g. admin)', () => {
+  it('renders "My Space" link pointing to /admin when user role is admin', () => {
     const user = { role: { name: 'admin' } };
     renderHeader(user);
     const mySpaceLinks = screen.getAllByRole('link', { name: /My Space/i });
     expect(mySpaceLinks).toHaveLength(1);
     const link = mySpaceLinks[0];
-    expect(link).toHaveAttribute('href', '/');
+    expect(link).toHaveAttribute('href', '/admin');
   });
 
   // --- CORRECTION ICI : un seul lien attendu ---

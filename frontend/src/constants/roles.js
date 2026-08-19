@@ -4,4 +4,5 @@ export const DASHBOARD_PATH_BY_ROLE = {
   client: '/client',
   commercial: '/commercial',
   technicien: '/technicien',
+  admin: '/admin',
 };

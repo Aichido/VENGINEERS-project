@@ -38,6 +38,7 @@ describe('Login', () => {
           <Route path="/client" element={<div>Client dashboard</div>} />
           <Route path="/commercial" element={<div>Commercial dashboard</div>} />
           <Route path="/technicien" element={<div>Technicien dashboard</div>} />
+          <Route path="/admin" element={<div>Admin dashboard</div>} />
           <Route path="/" element={<div>Home page</div>} />
         </Routes>
       </MemoryRouter>
@@ -166,7 +167,7 @@ describe('Login', () => {
     expect(await screen.findByText('Technicien dashboard')).toBeInTheDocument();
   });
 
-  it('falls back to home for a role without a dashboard yet (e.g. admin)', async () => {
+  it('redirects to /admin on the real router when the role is admin', async () => {
     const user = userEvent.setup();
     mockLogin.mockResolvedValue({ role: { name: 'admin' } });
     renderLoginWithRoutes();
@@ -175,6 +176,6 @@ describe('Login', () => {
     await user.type(screen.getByLabelText('Password'), 'vengineers@123');
     await user.click(screen.getByRole('button', { name: /log in/i }));
 
-    expect(await screen.findByText('Home page')).toBeInTheDocument();
+    expect(await screen.findByText('Admin dashboard')).toBeInTheDocument();
   });
 });

@@ -76,10 +76,40 @@ it('assigns an intervention to a technicien successfully', function () {
         ->assertJsonPath('intervention.technicien_id', $technicien->id);
 });
 
-it('rejects assignment when the intervention is not in nouvelle status', function () {
+it('rejects assignment when the intervention is en_cours', function () {
     [$technicien] = actingTechnicienForAssignTest();
     $intervention = makeInterventionForAssignTest([
+        'statut' => 'en_cours',
+        'technicien_id' => $technicien->id,
+    ]);
+    [$admin, $adminToken] = actingAdminForAssignTest();
+
+    $this->withHeader('Authorization', "Bearer {$adminToken}")
+        ->postJson('/api/admin/interventions/' . rawurlencode($intervention->public_id) . '/assign', ['technicien_id' => $technicien->id])
+        ->assertStatus(422);
+});
+
+it('allows reassignment when the intervention status is assignee', function () {
+    [$technicien1] = actingTechnicienForAssignTest();
+    [$technicien2] = actingTechnicienForAssignTest();
+    $intervention = makeInterventionForAssignTest([
         'statut' => 'assignee',
+        'technicien_id' => $technicien1->id,
+    ]);
+    [$admin, $adminToken] = actingAdminForAssignTest();
+
+    $response = $this->withHeader('Authorization', "Bearer {$adminToken}")
+        ->postJson('/api/admin/interventions/' . rawurlencode($intervention->public_id) . '/assign', ['technicien_id' => $technicien2->id]);
+
+    $response->assertStatus(200)
+        ->assertJsonPath('intervention.statut', 'assignee')
+        ->assertJsonPath('intervention.technicien_id', $technicien2->id);
+});
+
+it('rejects reassignment when the intervention status is terminee', function () {
+    [$technicien] = actingTechnicienForAssignTest();
+    $intervention = makeInterventionForAssignTest([
+        'statut' => 'terminee',
         'technicien_id' => $technicien->id,
     ]);
     [$admin, $adminToken] = actingAdminForAssignTest();

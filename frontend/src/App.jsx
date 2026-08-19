@@ -4,6 +4,7 @@ import { CartProvider } from './context/CartContext'
 import PublicLayout from './layouts/PublicLayout'
 import ProtectedRoute from './routes/ProtectedRoute'
 import DashboardLayout from './layouts/DashboardLayout'
+import { ToastProvider } from './context/ToastContext'
 
 // Public pages
 import Home from './pages/public/Home'
@@ -35,10 +36,20 @@ import TechnicienInterventions from './pages/dashboards/technicien/Interventions
 import TechnicienInterventionDetail from './pages/dashboards/technicien/InterventionDetail';
 import TechnicienReportHistory from './pages/dashboards/technicien/ReportHistory';
 
+// Dashboard Admin (Phase 6)
+import AdminDashboard from './pages/dashboards/admin/AdminDashboard';
+import Users from './pages/dashboards/admin/Users';
+import Categories from './pages/dashboards/admin/Categories';
+import ProductAdmin from './pages/dashboards/admin/Products';
+import ProductForm from './pages/dashboards/admin/ProductForm';
+import InterventionAssignment from './pages/dashboards/admin/InterventionAssignment';
+import Reports from './pages/dashboards/admin/Reports';
+
 function App() {
   return (
     <AuthProvider>
        <CartProvider>
+        <ToastProvider>
       <Routes>
         <Route element={<PublicLayout />}>
           <Route index element={<Home />} />
@@ -80,16 +91,22 @@ function App() {
           </Route>
         </Route>
 
-        {/*
-          Dashboards privés restants (Phase 6) — à activer au fur et à mesure :
-
-          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-            <Route element={<DashboardLayout />}>
-              <Route path="admin/*" element={<AdminDashboard />} />
-            </Route>
+        <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<Users />} />
+            <Route path="/admin/categories" element={<Categories />} />
+            <Route path="/admin/products" element={<ProductAdmin />} />
+            <Route path="/admin/products/new" element={<ProductForm />} />
+            <Route path="/admin/products/:id/edit" element={<ProductForm />} />
+            <Route path="/admin/interventions" element={<InterventionAssignment />} />
+            <Route path="/admin/reports" element={<Reports />} />
+            {/* /admin/users, /admin/products, /admin/categories, /admin/interventions
+                à ajouter au fur et à mesure des prochaines sous-étapes 6.7 */}
           </Route>
-        */}
+        </Route>
       </Routes>
+      </ToastProvider>
       </CartProvider>
     </AuthProvider>
   )
