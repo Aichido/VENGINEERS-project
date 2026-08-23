@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { FaFacebook, FaInstagram, FaLinkedin } from 'react-icons/fa6'
+import { FaFacebook, FaInstagram, FaLinkedin,  FaLocationDot, FaMessage, FaPhone } from 'react-icons/fa6'
 
 const COLORS = {
   primary: '#F80000',
@@ -44,17 +44,23 @@ export default function Footer() {
             </h4>
             <div className="space-y-3 text-sm text-gray-400">
               <div className="flex items-start gap-2">
-                <span style={{ color: COLORS.primary }}>📍</span>
+                <span style={{ color: COLORS.primary }}>
+                <FaLocationDot size={18} />
+                </span>
                 <p>Plaza Center, Mauritius</p>
               </div>
               <div className="flex items-start gap-2">
-                <span style={{ color: COLORS.primary }}>📧</span>
+                <span style={{ color: COLORS.primary }}>
+                <FaMessage size={18} />
+                </span>
                 <a href="mailto:contact@vengineers.mu" className="hover:text-white">
                   contact@vengineers.mu
                 </a>
               </div>
               <div className="flex items-start gap-2">
-                <span style={{ color: COLORS.primary }}>📞</span>
+                <span style={{ color: COLORS.primary }}>
+                <FaPhone size={18} />
+                </span>
                 <a href="tel:+230413000" className="hover:text-white">
                   +230 413 000
                 </a>

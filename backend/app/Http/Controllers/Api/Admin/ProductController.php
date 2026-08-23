@@ -4,18 +4,23 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreProductImageRequest;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
-use App\Http\Requests\Admin\StoreProductImageRequest;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Services\LogService;
 use App\Services\ProductImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    public function __construct(private ProductImageService $imageService) {}
+    public function __construct(
+        private ProductImageService $imageService,
+        private LogService $logService,
+    ) {
+    }
 
     public function index(Request $request)
     {
@@ -37,6 +42,15 @@ class ProductController extends Controller
     {
         $product = Product::create($request->validated());
 
+        $this->logService->activity(
+            $request->user(),
+            'product_created',
+            'product',
+            $product->id,
+            ['name' => $product->name],
+            $request
+        );
+
         return response()->json($product->load(['category', 'images']), 201);
     }
 
@@ -44,17 +58,37 @@ class ProductController extends Controller
     {
         $product->update($request->validated());
 
+        $this->logService->activity(
+            $request->user(),
+            'product_updated',
+            'product',
+            $product->id,
+            ['fields' => array_keys($request->validated())],
+            $request
+        );
+
         return response()->json($product->load(['category', 'images']));
     }
 
-    public function destroy(Product $product)
+    public function destroy(Request $request, Product $product)
     {
+        $productName = $product->name;
+
         // supprime les fichiers physiques avant la cascade DB
         foreach ($product->images as $image) {
             Storage::disk('public')->delete(array_filter([$image->path, $image->thumbnail_path]));
         }
 
         $product->delete(); // cascade sur product_images en base
+
+        $this->logService->activity(
+            $request->user(),
+            'product_deleted',
+            'product',
+            $product->id,
+            ['name' => $productName],
+            $request
+        );
 
         return response()->json(null, 204);
     }
@@ -69,10 +103,19 @@ class ProductController extends Controller
             return response()->json(['message' => $e->getMessage()], 422);
         }
 
+        $this->logService->activity(
+            $request->user(),
+            'product_image_added',
+            'product',
+            $product->id,
+            ['image_id' => $image->id],
+            $request
+        );
+
         return response()->json($image, 201);
     }
 
-    public function destroyImage(Product $product, ProductImage $image)
+    public function destroyImage(Request $request, Product $product, ProductImage $image)
     {
         if ($image->product_id !== $product->id) {
             return response()->json(['message' => 'Cette image n\'appartient pas à ce produit.'], 404);
@@ -80,16 +123,34 @@ class ProductController extends Controller
 
         $this->imageService->delete($image);
 
+        $this->logService->activity(
+            $request->user(),
+            'product_image_deleted',
+            'product',
+            $product->id,
+            ['image_id' => $image->id],
+            $request
+        );
+
         return response()->json(null, 204);
     }
 
-    public function setPrimaryImage(Product $product, ProductImage $image)
+    public function setPrimaryImage(Request $request, Product $product, ProductImage $image)
     {
         if ($image->product_id !== $product->id) {
             return response()->json(['message' => 'Cette image n\'appartient pas à ce produit.'], 404);
         }
 
         $this->imageService->setPrimary($product, $image);
+
+        $this->logService->activity(
+            $request->user(),
+            'product_image_set_primary',
+            'product',
+            $product->id,
+            ['image_id' => $image->id],
+            $request
+        );
 
         return response()->json($product->images()->orderBy('position')->get());
     }
@@ -102,6 +163,15 @@ class ProductController extends Controller
         ]);
 
         $this->imageService->reorder($product, $validated['image_ids']);
+
+        $this->logService->activity(
+            $request->user(),
+            'product_images_reordered',
+            'product',
+            $product->id,
+            ['image_ids' => $validated['image_ids']],
+            $request
+        );
 
         return response()->json($product->images()->orderBy('position')->get());
     }

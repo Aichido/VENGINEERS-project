@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
 use App\Models\Order;
 use App\Models\Product;
+use App\Services\LogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,10 @@ use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
+    public function __construct(private LogService $logService)
+    {
+    }
+
     public function index(Request $request): JsonResponse
     {
         $orders = Order::with('items.product')
@@ -32,6 +37,19 @@ class OrderController extends Controller
         $order->load('items.product');
 
         return response()->json($order);
+    }
+
+    public function history(Request $request, Order $order): JsonResponse
+    {
+        if ($order->client_id !== $request->user()->id) {
+            return response()->json(['message' => 'Accès refusé'], 403);
+        }
+
+        $history = \App\Models\OrderHistory::where('order_id', $order->id)
+            ->orderBy('timestamp', 'desc')
+            ->paginate(15);
+
+        return response()->json($history);
     }
 
     public function store(StoreOrderRequest $request): JsonResponse
@@ -73,6 +91,15 @@ class OrderController extends Controller
         });
 
         $order->load('items.product');
+
+        $this->logService->activity(
+            $request->user(),
+            'order_created',
+            'order',
+            $order->id,
+            ['public_id' => $order->public_id, 'total' => $order->total],
+            $request
+        );
 
         return response()->json($order, 201);
     }

@@ -13,6 +13,7 @@ import {
   X,
   Users,
  FolderTree,
+ History,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -45,6 +46,7 @@ const NAV_ITEMS_BY_ROLE = {
     { to: '/admin/categories', label: 'Categories', icon: FolderTree },
     { to: '/admin/interventions', label: 'Interventions', icon: Wrench },
     { to: '/admin/reports', label: 'Reports', icon: ClipboardList },
+    { to: '/admin/logs', label: 'Logs', icon: History },
   ],
  };
  

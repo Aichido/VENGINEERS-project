@@ -44,6 +44,7 @@ import ProductAdmin from './pages/dashboards/admin/Products';
 import ProductForm from './pages/dashboards/admin/ProductForm';
 import InterventionAssignment from './pages/dashboards/admin/InterventionAssignment';
 import Reports from './pages/dashboards/admin/Reports';
+import AdminLogs from './pages/dashboards/admin/AdminLogs';
 
 function App() {
   return (
@@ -103,6 +104,7 @@ function App() {
             <Route path="/admin/reports" element={<Reports />} />
             {/* /admin/users, /admin/products, /admin/categories, /admin/interventions
                 à ajouter au fur et à mesure des prochaines sous-étapes 6.7 */}
+            <Route path="/admin/logs" element={<AdminLogs />} />
           </Route>
         </Route>
       </Routes>

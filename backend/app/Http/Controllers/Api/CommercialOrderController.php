@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateOrderStatusRequest;
 use App\Models\Order;
 use App\Models\StockMovement;
+use App\Services\LogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,10 @@ class CommercialOrderController extends Controller
         'livree'     => [],
         'annulee'    => [],
     ];
+
+    public function __construct(private LogService $logService)
+    {
+    }
 
     public function index(Request $request): JsonResponse
     {
@@ -45,6 +50,15 @@ class CommercialOrderController extends Controller
         return response()->json($order);
     }
 
+    public function history(Order $order): JsonResponse
+    {
+        $history = \App\Models\OrderHistory::where('order_id', $order->id)
+            ->orderBy('timestamp', 'desc')
+            ->paginate(15);
+
+        return response()->json($history);
+    }
+
     public function update(UpdateOrderStatusRequest $request, Order $order): JsonResponse
     {
         $newStatus = $request->validated()['status'];
@@ -56,6 +70,13 @@ class CommercialOrderController extends Controller
             throw ValidationException::withMessages([
                 'status' => "Transition de « {$currentStatus} » vers « {$newStatus} » non autorisée.",
             ]);
+        }
+
+        // Idempotent : re-soumettre le même statut ne fait rien, pas de log
+        if ($newStatus === $currentStatus) {
+            $order->load('items.product', 'client', 'commercial');
+
+            return response()->json($order);
         }
 
         DB::transaction(function () use ($order, $newStatus, $currentStatus, $request) {
@@ -104,6 +125,8 @@ class CommercialOrderController extends Controller
             $order->status = $newStatus;
             $order->save();
         });
+
+        $this->logService->orderStatusChange($order, $currentStatus, $newStatus, $request->user());
 
         $order->load('items.product', 'client', 'commercial');
 

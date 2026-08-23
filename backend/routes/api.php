@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\Admin\InterventionController as AdminInterventionCo
 use App\Http\Controllers\Api\Admin\StatsController as AdminStatsController;
 
 use App\Http\Controllers\Api\InterventionReportDownloadController;
+use App\Http\Controllers\Api\Admin\LogsController as AdminLogsController;
 
 
 
@@ -40,6 +41,8 @@ Route::middleware(['auth:sanctum', 'role:client'])
 
         Route::get('/interventions', [InterventionController::class, 'index']);
         Route::post('/interventions', [InterventionController::class, 'store']);
+        Route::get('/orders/{order}/history', [OrderController::class, 'history']);
+        Route::get('/interventions/{intervention}/history', [InterventionController::class, 'history']);
     });
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/products', [ProductController::class, 'index']);
@@ -56,6 +59,7 @@ Route::middleware(['auth:sanctum', 'role:commercial'])
 
         Route::get('/stock', [StockController::class, 'index']);
         Route::post('/stock/{product}/notify-low-stock', [StockController::class, 'notifyLowStock']);
+        Route::get('/orders/{order}/history', [CommercialOrderController::class, 'history']);
     });
     
 //admin routes
@@ -99,6 +103,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])
 
         //6.4 stats
         Route::get('/stats', [AdminStatsController::class, 'index']);
+        Route::get('/logs', [AdminLogsController::class, 'index']);
+
     });
     
     // technicien routes
@@ -110,4 +116,5 @@ Route::middleware(['auth:sanctum', 'role:technicien'])
         Route::put('/interventions/{intervention}', [TechnicienInterventionController::class, 'update']);
         Route::post('/interventions/{intervention}/report', [TechnicienInterventionController::class, 'storeReport']);
         Route::get('/reports', [TechnicienInterventionController::class, 'reports']);
+        Route::get('/interventions/{intervention}/history', [TechnicienInterventionController::class, 'history']);
     });

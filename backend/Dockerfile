@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y \
         --with-jpeg \
         --with-webp \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
-    && pecl install mongodb && docker-php-ext-enable mongodb \
-    && pecl install pcov && docker-php-ext-enable pcov
+    && pecl install mongodb-2.4.0 && docker-php-ext-enable mongodb \
+    && pecl install pcov-1.0.11 && docker-php-ext-enable pcov
 
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
