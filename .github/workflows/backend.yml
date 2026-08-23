@@ -55,6 +55,7 @@ jobs:
           sed -i 's/^DB_USERNAME=.*/DB_USERNAME=root/' .env
           sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=root/' .env
 
+          echo "" >> .env
           echo "MONGO_HOST=mongo" >> .env
           echo "MONGO_PORT=27017" >> .env
           echo "MONGO_DATABASE=vengineers_test" >> .env
