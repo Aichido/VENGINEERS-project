@@ -20,7 +20,7 @@ jobs:
         with:
           php-version: '8.3'
           coverage: pcov
-          extensions: mbstring, dom, fileinfo, mysql
+          extensions: mbstring, dom, fileinfo, mysql, mongodb-2.4.0
 
       - name: Install Composer dependencies
         working-directory: backend
