@@ -114,6 +114,13 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        // ---------- MongoDB (logs & historiques - Phase 7) ----------
+        'mongodb' => [
+            'driver' => 'mongodb',
+            'dsn' => env('MONGO_DSN', 'mongodb://' . env('MONGO_HOST', 'mongo') . ':' . env('MONGO_PORT', '27017')),
+            'database' => env('MONGO_DATABASE', 'vengineers_logs'),
+        ],
+
     ],
 
     /*

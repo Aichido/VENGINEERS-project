@@ -7,11 +7,16 @@ use App\Http\Requests\AssignInterventionRequest;
 use App\Models\Intervention;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\LogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
 class InterventionAssignmentController extends Controller
 {
+    public function __construct(private LogService $logService)
+    {
+    }
+
     public function assign(AssignInterventionRequest $request, Intervention $intervention): JsonResponse
     {
         if (!in_array($intervention->statut, ['nouvelle', 'assignee'], true)) {
@@ -28,10 +33,23 @@ class InterventionAssignmentController extends Controller
             ]);
         }
 
+        $previousTechnicienId = $intervention->technicien_id;
+        $isReassignment = $previousTechnicienId !== null && $previousTechnicienId !== $technicien->id;
+
         $intervention->update([
             'technicien_id' => $technicien->id,
             'statut' => 'assignee',
         ]);
+
+        $this->logService->interventionEvent(
+            $intervention,
+            $isReassignment ? 'reassigned' : 'assigned',
+            $request->user(),
+            [
+                'technicien_id' => $technicien->id,
+                'previous_technicien_id' => $previousTechnicienId,
+            ]
+        );
 
         return response()->json([
             'message' => 'Intervention assignée avec succès.',

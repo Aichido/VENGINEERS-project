@@ -16,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias(['role' => \App\Http\Middleware\CheckRole::class]);
         $middleware->redirectGuestsTo(fn () => null);
+
+        // Phase 8 : rate limiting global sur toute l'API (limiteur 'api'
+        // défini dans AppServiceProvider::boot()).
+        $middleware->throttleApi();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
          $exceptions->render(function (AuthenticationException $e, $request) {

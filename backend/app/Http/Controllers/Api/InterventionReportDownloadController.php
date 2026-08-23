@@ -5,12 +5,17 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Intervention;
 use App\Models\InterventionReport;
+use App\Services\LogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InterventionReportDownloadController extends Controller
 {
+    public function __construct(private LogService $logService)
+    {
+    }
+
     public function download(Request $request, Intervention $intervention, InterventionReport $report): StreamedResponse
     {
         // vérifie que le rapport appartient bien à cette intervention (pas juste un id valide au hasard)
@@ -32,6 +37,15 @@ class InterventionReportDownloadController extends Controller
             $report->fichier_path && Storage::disk('local')->exists($report->fichier_path),
             404,
             'Fichier introuvable'
+        );
+
+        $this->logService->activity(
+            $user,
+            'intervention_report_downloaded',
+            'intervention_report',
+            $report->id,
+            ['intervention_public_id' => $intervention->public_id, 'role' => $role],
+            $request
         );
 
         return Storage::disk('local')->download($report->fichier_path);
