@@ -10,7 +10,25 @@ jobs:
   backend-tests:
     name: Backend (Laravel) - Tests & Coverage
     runs-on: ubuntu-latest
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: vengineers_test
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      MONGO_HOST: 127.0.0.1
+      MONGO_PORT: 27017
+      MONGO_DATABASE: vengineers_tes
     services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: vengineers_test
+          MYSQL_ROOT_PASSWORD: root
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
       mongo:
         image: mongo:7
         ports: ["27017:27017"]
