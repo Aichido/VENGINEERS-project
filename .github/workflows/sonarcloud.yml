@@ -41,7 +41,7 @@ jobs:
         working-directory: backend
         run: |
           echo "" >> .env
-          echo "MONGO_HOST=mongo" >> .env
+          echo "MONGO_HOST=127.0.0.1" >> .env
           echo "MONGO_PORT=27017" >> .env
           echo "MONGO_DATABASE=vengineers_test" >> .env
 
