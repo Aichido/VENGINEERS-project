@@ -18,7 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(fn () => null);
 
         // Ajout explicite du middleware CORS au groupe api (Laravel 11 ne l'ajoute plus automatiquement)
-        $middleware->appendToGroup('api', \Illuminate\Http\Middleware\HandleCors::class);
+        // $middleware->appendToGroup('api', \Illuminate\Http\Middleware\HandleCors::class);
         
         $middleware->prependToGroup('api', \App\Http\Middleware\SecureHeaders::class);
 
@@ -35,3 +35,4 @@ return Application::configure(basePath: dirname(__DIR__))
             }
     });
     })->create();
+    
