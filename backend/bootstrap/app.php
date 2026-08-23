@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias(['role' => \App\Http\Middleware\CheckRole::class]);
         $middleware->redirectGuestsTo(fn () => null);
 
+        // Ajout explicite du middleware CORS au groupe api (Laravel 11 ne l'ajoute plus automatiquement)
+        $middleware->appendToGroup('api', \Illuminate\Http\Middleware\HandleCors::class);
+
         // Phase 8 : rate limiting global sur toute l'API (limiteur 'api'
         // défini dans AppServiceProvider::boot()).
         $middleware->throttleApi();
@@ -30,3 +33,4 @@ return Application::configure(basePath: dirname(__DIR__))
             }
     });
     })->create();
+    
